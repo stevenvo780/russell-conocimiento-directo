@@ -3,6 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
+  // Keep browser concurrency bounded: SVG + axe audits are deliberately heavy.
+  workers: 2,
   forbidOnly: true,
   retries: 0,
   reporter: [['list']],

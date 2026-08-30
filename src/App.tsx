@@ -26,13 +26,19 @@ const routeMetadata: Record<string, { title: string; description: string }> = {
 function detectTheme(): Theme {
   const saved = window.localStorage.getItem('russell-theme');
   if (saved === 'dark' || saved === 'light') return saved;
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return 'dark';
 }
 
 function ScrollReset() {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    const frame = window.requestAnimationFrame(() => {
+      const hashTarget = window.location.hash
+        ? document.getElementById(decodeURIComponent(window.location.hash.slice(1)))
+        : null;
+      if (hashTarget) hashTarget.scrollIntoView({ block: 'start' });
+      else window.scrollTo({ top: 0, behavior: 'instant' });
+    });
     const routePath = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
     const metadata = routeMetadata[routePath] ?? routeMetadata['/'];
     const canonicalUrl = routePath === '/' ? `${PUBLIC_ORIGIN}/` : `${PUBLIC_ORIGIN}${routePath}`;
@@ -42,6 +48,7 @@ function ScrollReset() {
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', metadata.description);
     document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonicalUrl);
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
+    return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
   return null;
 }

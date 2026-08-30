@@ -15,16 +15,26 @@ function BrandMark() {
 export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void }) {
   const [activeMode, setActiveMode] = useState<'direct' | 'reference'>('direct');
 
+  const moveComparisonTab = (direction: 'previous' | 'next' | 'first' | 'last') => {
+    const nextMode = direction === 'previous' || direction === 'first' ? 'direct' : 'reference';
+    setActiveMode(nextMode);
+    window.requestAnimationFrame(() => document.getElementById(`tab-${nextMode}`)?.focus());
+  };
+
   return (
     <main id="main-content" className="site-shell">
       <header className="site-header">
-        <a className="site-brand" href="#inicio" aria-label="Ir al inicio">
-          <BrandMark />
-          <span>
-            <strong>Russell</strong>
-            <small>capítulo 5</small>
-          </span>
-        </a>
+        <div className="site-identity">
+          <a className="site-brand" href="https://paideia.stevenvallejo.com/" aria-label="Volver a Paideía">
+            <BrandMark />
+            <span>
+              <strong>Paideía</strong>
+              <small>Mouseîon</small>
+            </span>
+          </a>
+          <span aria-hidden="true">/</span>
+          <a className="site-context" href="#inicio">Russell · 05</a>
+        </div>
         <nav aria-label="Navegación principal">
           <a href="#tesis">Tesis</a>
           <a href="#recorrido">Recorrido</a>
@@ -32,6 +42,7 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
           <Link to="/fuentes">Fuentes</Link>
         </nav>
         <div className="site-actions">
+          <a className="header-repo" href={REPO_URL} target="_blank" rel="noreferrer">GitHub ↗</a>
           <button type="button" className="theme-button" onClick={onTheme} aria-label={`Cambiar al tema ${theme === 'dark' ? 'claro' : 'oscuro'}`}>
             <span aria-hidden="true">{theme === 'dark' ? '☼' : '◐'}</span>
           </button>
@@ -43,6 +54,16 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
         <EpistemicField />
         <div className="hero-orb hero-direct" aria-hidden="true" />
         <div className="hero-orb hero-reference" aria-hidden="true" />
+        <div className="hero-side-note hero-side-direct" aria-hidden="true">
+          <span>01 · lo dado</span>
+          <i />
+          <strong>presencia</strong>
+        </div>
+        <div className="hero-side-note hero-side-reference" aria-hidden="true">
+          <span>02 · lo ausente</span>
+          <i />
+          <strong>descripción</strong>
+        </div>
         <motion.div
           className="hero-content"
           initial={{ opacity: 0, y: 24 }}
@@ -56,8 +77,18 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
             <em>de lo ausente</em>
           </h1>
           <p className="hero-subtitle">
-            Cómo conocemos mesas, otras mentes y personajes históricos que nunca se presentan directamente ante nosotros.
+            Una investigación visual sobre cómo una experiencia mínima puede abrir un mundo que jamás se presenta por completo.
           </p>
+          <div className="hero-problem">
+            <span>El problema en diez segundos</span>
+            <p>Veo color. Toco dureza. Pero ¿dónde está <em>la mesa</em>?</p>
+          </div>
+          <div className="hero-legend" aria-label="Código visual de la exposición">
+            <span className="legend-direct"><i /> presentado</span>
+            <span className="legend-inference"><i /> inferido</span>
+            <span className="legend-reference"><i /> referido</span>
+            <span className="legend-doubt"><i /> discutible</span>
+          </div>
           <div className="hero-ctas">
             <Link className="button button-primary" to="/presentacion">
               Ver presentación <span aria-hidden="true">→</span>
@@ -70,7 +101,7 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
             <span>14 diapositivas</span>
             <span>25–30 minutos</span>
             <span>8 visuales</span>
-            <span>notas del ponente</span>
+            <span>modo ponente</span>
           </div>
         </motion.div>
         <a className="scroll-cue" href="#tesis">
@@ -86,12 +117,57 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
         </div>
         <div className="thesis-copy">
           <p>
-            Nuestra experiencia inmediata es estrecha: un color, una resistencia, un recuerdo, un pensamiento. Pero esos elementos pueden combinarse en verdades y descripciones que alcanzan objetos ausentes.
+            Nuestra experiencia inmediata es estrecha: un color, una resistencia, un recuerdo. Russell convierte esa limitación en una arquitectura: lo presente aporta los materiales; las descripciones construyen el alcance.
           </p>
           <blockquote>
             «Toda proposición que podamos entender debe estar compuesta exclusivamente por elementos de los cuales tengamos un conocimiento directo.»
             <cite>Bertrand Russell, capítulo 5</cite>
           </blockquote>
+        </div>
+      </section>
+
+      <section className="cases-section content-frame" aria-labelledby="cases-title">
+        <header className="cases-heading">
+          <p className="section-kicker">Tres pruebas de distancia</p>
+          <h2 id="cases-title">El objeto se aleja.<br />El conocimiento no desaparece.</h2>
+          <p>Cada caso conserva un anclaje, pero exige una operación más compleja para alcanzar aquello de lo que hablamos.</p>
+        </header>
+        <div className="case-grid">
+          {[
+            {
+              number: '01',
+              label: 'Percepción',
+              title: 'La mesa',
+              question: '¿Cómo paso del color y la dureza al objeto físico?',
+              path: ['datos', 'causa'],
+              tone: 'direct',
+            },
+            {
+              number: '02',
+              label: 'Identificación',
+              title: 'El ganador',
+              question: 'Puedo conocer a todos y todavía no saber quién satisface «el F».',
+              path: ['personas', 'unicidad'],
+              tone: 'bridge',
+            },
+            {
+              number: '03',
+              label: 'Historia',
+              title: 'Bismarck',
+              question: 'El nombre llega hasta mí sin que el individuo haya estado presente.',
+              path: ['testimonio', 'referente'],
+              tone: 'reference',
+            },
+          ].map((item) => (
+            <article key={item.number} className={`case-card case-${item.tone}`} data-number={item.number}>
+              <div className="case-card-top"><span>{item.number}</span><small>{item.label}</small></div>
+              <h3>{item.title}</h3>
+              <p>{item.question}</p>
+              <div className="case-path" aria-label={`Recorrido: ${item.path.join(' hacia ')}`}>
+                <span>{item.path[0]}</span><i aria-hidden="true" /><span>{item.path[1]}</span>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -104,8 +180,15 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
               id="tab-direct"
               aria-controls="comparison-panel"
               aria-selected={activeMode === 'direct'}
+              tabIndex={activeMode === 'direct' ? 0 : -1}
               className={activeMode === 'direct' ? 'is-active direct-tab' : 'direct-tab'}
               onClick={() => setActiveMode('direct')}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowRight' || event.key === 'End') {
+                  event.preventDefault();
+                  moveComparisonTab(event.key === 'End' ? 'last' : 'next');
+                }
+              }}
             >
               <span>01</span> Conocimiento directo
             </button>
@@ -115,8 +198,15 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
               id="tab-reference"
               aria-controls="comparison-panel"
               aria-selected={activeMode === 'reference'}
+              tabIndex={activeMode === 'reference' ? 0 : -1}
               className={activeMode === 'reference' ? 'is-active reference-tab' : 'reference-tab'}
               onClick={() => setActiveMode('reference')}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowLeft' || event.key === 'Home') {
+                  event.preventDefault();
+                  moveComparisonTab(event.key === 'Home' ? 'first' : 'previous');
+                }
+              }}
             >
               <span>02</span> Por referencia
             </button>
@@ -156,8 +246,8 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
           <h2>Un mapa antes de entrar en los casos</h2>
           <p>El capítulo separa dos preguntas: qué cosas conocemos y mediante qué relación las conocemos.</p>
         </div>
-        <div className="map-visual" tabIndex={0} role="region" aria-label="Diagrama desplazable: taxonomía del conocimiento">
-          <KnowledgeTree />
+        <div className="map-visual" tabIndex={0} role="region" aria-label="Diagrama: taxonomía del conocimiento">
+          <KnowledgeTree compact />
         </div>
       </section>
 
@@ -174,41 +264,10 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
               <span>Russell no niega la mesa. Niega que sea conocida del mismo modo que su color.</span>
             </div>
           </div>
-          <div className="table-story-visual" tabIndex={0} role="region" aria-label="Diagrama desplazable: de los datos sensoriales a la mesa física">
-            <TableBridge />
+          <div className="table-story-visual" tabIndex={0} role="region" aria-label="Diagrama: de los datos sensoriales a la mesa física">
+            <TableBridge compact />
           </div>
         </div>
-      </section>
-
-      <section className="route-section content-frame">
-        <div className="section-number">03</div>
-        <div className="section-heading route-heading">
-          <p className="section-kicker">Recorrido de la exposición</p>
-          <h2>De la mesa al mundo histórico</h2>
-        </div>
-        <ol className="route-list">
-          {[
-            ['Presencia', 'El matiz y las verdades que formulamos sobre él.'],
-            ['Apariencia', 'Los datos de los sentidos frente a la mesa física.'],
-            ['Inventario', 'Sensación, memoria, introspección, yo y universales.'],
-            ['Unicidad', 'Qué significa afirmar que existe «el F».'],
-            ['Identificación', 'Conocer candidatos sin conocer aún al ganador.'],
-            ['Distancia', 'Bismarck, la máscara de hierro y Julio César.'],
-            ['Principio', 'Todo significado debe conservar un anclaje directo.'],
-          ].map(([title, text], index) => (
-            <motion.li
-              key={title}
-              initial={{ opacity: 0, x: -16 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.4 }}
-              transition={{ delay: index * 0.06 }}
-            >
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <strong>{title}</strong>
-              <p>{text}</p>
-            </motion.li>
-          ))}
-        </ol>
       </section>
 
       <section className="questions-section">
@@ -234,7 +293,16 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
           <p>
             La referencia no sustituye el contacto con el mundo: lo presupone y lo extiende. Con un vocabulario nacido de la experiencia podemos comprender aquello que jamás estuvo ante nosotros.
           </p>
-          <div className="closing-visual" tabIndex={0} role="region" aria-label="Diagrama desplazable: anclaje y alcance del conocimiento"><AnchorReach /></div>
+          <div className="closing-equation" aria-label="Conocimiento directo más verdades y descripciones produce alcance">
+            <span><small>01</small> directo</span>
+            <b aria-hidden="true">+</b>
+            <span><small>02</small> verdades</span>
+            <b aria-hidden="true">+</b>
+            <span><small>03</small> descripción</span>
+            <b aria-hidden="true">=</b>
+            <span className="equation-result"><small>resultado</small> alcance</span>
+          </div>
+          <div className="closing-visual" tabIndex={0} role="region" aria-label="Diagrama: anclaje y alcance del conocimiento"><AnchorReach compact /></div>
           <div className="closing-actions">
             <Link className="button button-primary" to="/presentacion">Iniciar exposición <span aria-hidden="true">→</span></Link>
             <a className="button button-ghost" href={guideUrl}>Abrir el guion completo</a>

@@ -15,9 +15,10 @@ Bertrand Russell: **conocimiento directo y conocimiento por referencia**.
 
 ## La idea
 
-Russell sostiene que todo conocimiento se ancla finalmente en elementos conocidos
-de manera directa, pero que las descripciones permiten hablar con sentido de mesas
-físicas, otras mentes, personajes históricos y objetos nunca experimentados.
+Russell sostiene que toda proposición que podamos comprender debe componerse de
+elementos conocidos directamente. Las descripciones permiten, desde ese anclaje,
+pensar con sentido en mesas físicas, personajes históricos y objetos nunca
+experimentados.
 
 La exposición resume esa arquitectura en una fórmula:
 
@@ -25,18 +26,20 @@ La exposición resume esa arquitectura en una fórmula:
 
 ## Entregables
 
-- [`Capitulo5.md`](./Capitulo5.md): guion canónico, desarrollo conceptual, siete
-  diagramas Mermaid, tabla comparativa, glosario, preguntas y notas por diapositiva.
+- [`Capitulo5.md`](./Capitulo5.md): guion canónico de 27:15, aparato de citas,
+  ocho diagramas Mermaid, glosario, preguntas y notas por diapositiva.
 - `/`: introducción narrativa navegable.
-- `/presentacion`: deck de 14 diapositivas con SVG animados, índice, progreso,
-  notas del ponente, navegación táctil y pantalla completa.
+- `/presentacion`: deck de 14 diapositivas con revelados argumentales, SVG
+  adaptativos, enlaces profundos, historial, índice por actos, notas navegables,
+  gestos táctiles y pantalla completa.
 - `/fuentes`: referencia bibliográfica y criterio editorial.
 
 ## Atajos de la presentación
 
 | Tecla | Acción |
 |---|---|
-| `←` / `→` / espacio | navegar |
+| `←` / `→` / espacio | avanzar o retroceder un revelado/diapositiva |
+| `J` / `K` | avanzar / retroceder |
 | `O` o `I` | índice |
 | `S` o `N` | notas del ponente |
 | `F` | pantalla completa |
@@ -44,7 +47,8 @@ La exposición resume esa arquitectura en una fórmula:
 | `Esc` | cerrar panel |
 | `?` | ayuda |
 
-En móvil se puede navegar deslizando horizontalmente.
+En móvil se puede navegar deslizando horizontalmente; los ocho diagramas usan
+composiciones verticales propias y no dependen de una reducción del SVG de escritorio.
 
 ## Stack
 
@@ -60,7 +64,7 @@ tiempo de ejecución. El resultado de `npm run build` es un sitio estático.
 ## Desarrollo
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 

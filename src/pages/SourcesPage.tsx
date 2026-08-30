@@ -13,7 +13,7 @@ export function SourcesPage() {
       </header>
 
       <article className="sources-content">
-        <p className="section-kicker">Aparato mínimo</p>
+        <p className="section-kicker">Aparato de lectura</p>
         <h1>Fuentes y criterio editorial</h1>
         <p className="sources-lead">
           La exposición reconstruye un solo capítulo y distingue con claridad entre la tesis de Russell, la explicación pedagógica y las preguntas críticas.
@@ -37,7 +37,7 @@ export function SourcesPage() {
           <div>
             <h2>Guion canónico</h2>
             <p>
-              El desarrollo completo, los siete diagramas Mermaid, el glosario, las preguntas y las notas por diapositiva están en un único documento Markdown.
+              El desarrollo completo, ocho diagramas Mermaid, localizadores de página, glosario, preguntas y notas por diapositiva están en un único documento Markdown.
             </p>
             <a className="text-link" href={guideUrl}>Abrir Capitulo5.md <span aria-hidden="true">→</span></a>
           </div>
@@ -48,7 +48,7 @@ export function SourcesPage() {
           <div>
             <h2>Criterio de fidelidad</h2>
             <ul>
-              <li>Las citas literales son breves y se identifican como tales.</li>
+              <li>Las citas literales son breves, están identificadas y llevan localizador de página.</li>
               <li>Los ejemplos de la mesa, el candidato, Bismarck y Julio César proceden del capítulo.</li>
               <li>Los ejemplos contemporáneos se señalan como recursos didácticos.</li>
               <li>El yo se presenta como probable, no indudable.</li>
