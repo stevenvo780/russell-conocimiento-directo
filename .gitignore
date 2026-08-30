@@ -1,0 +1,10 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+.vercel/
+.DS_Store
+
+# Fuentes de trabajo locales: no se publican en el repo de la exposición.
+Bertrand Russell Los Problemas de la Filosofia  1995.pdf
+Bertrand Russell - Los problemas de la filosofía (1995).md

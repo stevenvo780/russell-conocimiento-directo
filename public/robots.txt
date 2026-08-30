@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://stevenvo780.github.io/russell-conocimiento-directo/sitemap.xml

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Monograma de la exposición Russell</title>
+  <rect width="64" height="64" rx="14" fill="#0b1417"/>
+  <circle cx="24" cy="32" r="13" fill="none" stroke="#e0a85e" stroke-width="2"/>
+  <circle cx="40" cy="32" r="13" fill="none" stroke="#43b5a6" stroke-width="2"/>
+  <circle cx="32" cy="32" r="3" fill="#e8e0d4"/>
+</svg>
