@@ -185,7 +185,7 @@ export const slides: Slide[] = [
     eyebrow: '06 · Lo general también se presenta',
     title: 'Sin universales no podríamos formar una oración',
     body: (
-      <div className="universal-field" role="img" aria-label="Universal en el centro, relacionado con los ejemplos blancura, diversidad y fraternidad">
+      <div className="universal-field" role="img" aria-label="Concebir significa aprehender un universal; alrededor aparecen los ejemplos blancura, diversidad, fraternidad, semejanza, relación y causar">
         <span className="universal u1">blancura</span>
         <span className="universal u2">diversidad</span>
         <span className="universal u3">fraternidad</span>
