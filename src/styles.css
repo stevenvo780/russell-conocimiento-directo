@@ -3772,12 +3772,17 @@ kbd {
   border-radius: 0.7rem;
 }
 
-.speaker-notes .speaker-note__transition p {
+.speaker-notes .speaker-note__transition-copy,
+.speaker-notes .speaker-note__transition-copy p {
   max-width: none;
   margin: 0;
   color: var(--paper-strong);
   font-size: calc(1.02rem * var(--note-scale));
   line-height: 1.5;
+}
+
+.speaker-note__transition-copy {
+  margin-top: 0.35rem;
 }
 
 .speaker-note__transition strong {

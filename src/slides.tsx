@@ -65,7 +65,8 @@ function SpeakerNotes({
         <div className="speaker-note__content">{pitfall}</div>
       </aside>
       <footer className="speaker-note__transition">
-        <p><strong>Transición:</strong> {transition}</p>
+        <strong>Transición:</strong>
+        <div className="speaker-note__transition-copy">{transition}</div>
       </footer>
     </article>
   );

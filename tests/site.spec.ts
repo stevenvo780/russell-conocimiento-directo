@@ -37,6 +37,11 @@ test('home communicates the thesis and passes accessibility checks in both theme
 });
 
 test('presentation supports keyboard navigation, presenter notes and a focus-trapped overview', async ({ page }) => {
+  const runtimeErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') runtimeErrors.push(`console: ${message.text()}`);
+  });
+  page.on('pageerror', (error) => runtimeErrors.push(`pageerror: ${error.message}`));
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/presentacion');
   await expect(page.getByText(/Diapositiva 1 de 14:/)).toBeAttached();
@@ -83,6 +88,7 @@ test('presentation supports keyboard navigation, presenter notes and a focus-tra
   await expect(index.getByRole('button', { name: /cerrar panel/i })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(indexButton).toBeFocused();
+  expect(runtimeErrors).toEqual([]);
 });
 
 test('presenter tools expose semantic reveals, a laser pointer and a persistent session timer', async ({ page }) => {
