@@ -53,6 +53,8 @@ Al final, el público debe poder responder cinco preguntas:
 
 Cada diapositiva realiza una sola tarea. La pantalla formula el golpe conceptual; este documento contiene la explicación, el ejemplo, la cautela y la frase de transición. No conviene leer la pantalla: hay que **contar el recorrido**.
 
+Cada sección comienza con una **Ficha oral V3**. Esa ficha es la consola mínima para exponer: tiempo, objetivo, apertura, explicación, interacción, error y transición. El desarrollo que aparece debajo aporta el respaldo conceptual; no necesita leerse palabra por palabra durante la presentación.
+
 ### Navegación rápida
 
 - [Mapa sincronizado de las 14 diapositivas](#mapa-sincronizado)
@@ -122,6 +124,16 @@ En otros casos, el paso puede depender de distintas **verdades de enlace**. La m
 
 ## Diapositiva 1 — Toca la mesa · 1:30
 
+### Ficha oral V3
+
+- **Tiempo:** 1:30.
+- **Objetivo:** instalar la diferencia entre lo presentado y el objeto físico sin resolverla todavía.
+- **Apertura oral:** «Antes de definir nada, toca la mesa. Dime qué aparece ante tu vista y bajo tu mano».
+- **Explicación:** recoge color, forma, textura, frío, dureza y resistencia como candidatos a datos sensoriales; pregunta si la mesa física aparece del mismo modo.
+- **Interacción:** pide a una persona tocar la mesa y pregunta cuál de esas cualidades es *la mesa física*. Guarda cinco segundos de silencio.
+- **Error que evitar:** no concluyas que solo existen sensaciones ni niegues la mesa; aquí se plantea el problema.
+- **Transición:** «Russell convierte esta duda cotidiana en un mapa completo de nuestro conocimiento».
+
 ### En pantalla
 
 > **Toca la mesa. ¿Qué conoces realmente?**
@@ -154,6 +166,16 @@ No resuelvas todavía. Di:
 
 ## Diapositiva 2 — La arquitectura de lo ausente · 1:00
 
+### Ficha oral V3
+
+- **Tiempo:** 1:00.
+- **Objetivo:** presentar la promesa: explicar cómo una experiencia privada estrecha alcanza objetos ausentes.
+- **Apertura oral:** «Nuestra experiencia inmediata cabe en muy poco; nuestro conocimiento habla de un mundo inmenso».
+- **Explicación:** contrapón este color, recuerdo y pensamiento con mesas físicas, otras mentes, Bismarck y Julio César. **Anclaje/alcance es PARÁFRASIS**, no cita.
+- **Interacción:** pregunta quién sabe algo de Bismarck sin haberlo conocido personalmente.
+- **Error que evitar:** no atribuyas a Russell las palabras «anclaje» y «alcance».
+- **Transición:** «Para responder, Russell abre primero la palabra conocer».
+
 ### En pantalla
 
 > **Directo = anclaje · Referencia = alcance**
@@ -176,6 +198,16 @@ La respuesta será una arquitectura de dos niveles. El conocimiento directo **an
 ---
 
 ## Diapositiva 3 — Russell abre una grieta en la palabra «conocer» · 2:00
+
+### Ficha oral V3
+
+- **Tiempo:** 2:00.
+- **Objetivo:** distinguir cosas/verdades y, después, directo/referencia.
+- **Apertura oral:** «Russell usa la palabra conocer para dos trabajos distintos; si no los separamos, el capítulo se vuelve borroso».
+- **Explicación:** saber *que p* es conocimiento de verdades; conocer *x*, de cosas. Lo directo es lógicamente independiente de inferencia; la referencia implica verdades de enlace.
+- **Interacción:** pide clasificar «veo este matiz» y «sé que este matiz es oscuro».
+- **Error que evitar:** no opongas verdadero/dudoso ni conviertas independencia lógica en una secuencia temporal o psicológica obligatoria.
+- **Transición:** «Veamos la independencia lógica en un caso que todos podemos observar».
 
 ### En pantalla
 
@@ -230,6 +262,16 @@ Ambos pueden producir conocimiento. Se diferencian por **cómo** llega el objeto
 
 ## Diapositiva 4 — El color no depende de la frase · 2:00
 
+### Ficha oral V3
+
+- **Tiempo:** 2:00.
+- **Objetivo:** mostrar que el conocimiento del dato no depende lógicamente de las proposiciones formuladas sobre él.
+- **Apertura oral:** «Miren el matiz. Ahora escuchen: “es castaño”, “es oscuro”. ¿Las frases añadieron más color?».
+- **Explicación:** podemos *además* clasificar el matiz; eso añade verdades, no más presencia. «De un modo perfecto y completo» es **CITA, p. 48**, limitada a este sentido.
+- **Interacción:** pregunta si *castaño* añadió presencia o una verdad.
+- **Error que evitar:** no digas que el color llega cronológicamente antes que toda frase, que conocemos todas sus propiedades o que nuestros juicios son infalibles.
+- **Transición:** «El color se presenta. La mesa física, en cambio, no se presenta de ese modo».
+
 ### En pantalla
 
 | Cosa presentada | Verdades sobre ella |
@@ -271,6 +313,16 @@ Muestra un color y pregunta: «¿Necesitaste una prueba para que este matiz apar
 ---
 
 ## Diapositiva 5 — Aquí ocurre el salto · 2:30
+
+### Ficha oral V3
+
+- **Tiempo:** 2:30.
+- **Objetivo:** reconstruir el paso específico de los datos sensoriales a la mesa física conocida por referencia.
+- **Apertura oral:** «El salto ocurre cuando dejamos de enumerar cualidades y preguntamos qué las causa».
+- **Explicación:** recorre datos → verdad de enlace → descripción → objeto referido. «El objeto físico que causa tales y cuales datos de los sentidos» es **CITA, p. 48**.
+- **Interacción:** pregunta cuál es el último eslabón que realmente ven o tocan.
+- **Error que evitar:** Russell no niega la mesa; tampoco esta cadena causal es la forma general de toda referencia.
+- **Transición:** «Si lo directo terminara en este instante sensible, ni siquiera sabríamos que existe un pasado».
 
 ### En pantalla
 
@@ -319,6 +371,16 @@ Russell llega a decir que, estrictamente hablando, la cosa misma que constituye 
 ---
 
 ## Diapositiva 6 — El inventario de lo directo · 2:30
+
+### Ficha oral V3
+
+- **Tiempo:** 2:30.
+- **Objetivo:** ampliar el inventario directo sin borrar los diferentes grados de certeza.
+- **Apertura oral:** «Si lo directo fuera solo lo que siento ahora, no habría pasado, vida mental comprensible ni términos generales».
+- **Explicación:** sensación = datos presentes; memoria = datos antes presentados; introspección = vida mental propia; algunos universales = elementos generales; yo = probable.
+- **Interacción:** pide recordar el desayuno y notar el acto actual de recordarlo; pregunta qué es memoria y qué introspección.
+- **Error que evitar:** memoria como fuente no significa recuerdo siempre verdadero; objetos físicos, mentes ajenas y todos los universales no pasan automáticamente a lo directo.
+- **Transición:** «Una pieza del inventario conserva un signo de interrogación: ¿conocemos también al yo que conoce?».
 
 ### En pantalla
 
@@ -380,6 +442,16 @@ Ambos se conocen por referencia.
 
 ## Diapositiva 7 — Encuentro pensamientos. ¿Encuentro al pensador? · 2:00
 
+### Ficha oral V3
+
+- **Tiempo:** 2:00.
+- **Objetivo:** distinguir consciencia de estados mentales y conocimiento de un sujeto permanente.
+- **Apertura oral:** «Cuando miro hacia dentro encuentro un pensamiento; la pregunta difícil es si encuentro también al pensador».
+- **Explicación:** «yo conozco este dato» parece exigir dato, acto y sujeto. Russell considera probable algún conocimiento del sujeto, no una persona permanente ni una certeza indudable.
+- **Interacción:** invita a notar un pensamiento durante tres segundos y pregunta si el yo apareció con igual claridad.
+- **Error que evitar:** no conviertas la cautela de Russell en certeza cartesiana ni introspección de un estado en prueba de un yo permanente.
+- **Transición:** «El inventario guarda otra sorpresa: no todo lo directo tiene que ser particular y existente».
+
 ### En pantalla
 
 > **La relación parece exigir un sujeto; no demuestra una persona permanente.**
@@ -420,6 +492,16 @@ El conocimiento del yo parece **probable**, pero Russell declara que no es prude
 
 ## Diapositiva 8 — Lo más abstracto también puede ser directo · 1:45
 
+### Ficha oral V3
+
+- **Tiempo:** 1:45.
+- **Objetivo:** explicar por qué algunos universales forman parte de los elementos directamente conocidos.
+- **Apertura oral:** «Intenten comprender “esta mesa resiste” sin usar nada general. Incluso el verbo rebasa este caso particular».
+- **Explicación:** *concebir* es aprehender un universal; *concepto* es el universal aprehendido. Los verbos tienen sentido general. Muchos universales, sin embargo, solo se conocen por referencia.
+- **Interacción:** pide trasladar «resistir» a dos casos distintos para hacer visible la función general del verbo.
+- **Error que evitar:** no confundas concebir/concepto ni afirmes que todo universal es directamente conocido.
+- **Transición:** «Ya tenemos particulares y universales; ahora podemos construir una descripción de lo ausente».
+
 ### En pantalla
 
 > **Concebir = aprehender un universal**
@@ -453,6 +535,16 @@ Esto no significa que **todo** universal sea directamente conocido. Hacia el fin
 # ACTO II · DISTANCIA
 
 ## Diapositiva 9 — La palabra «el» abre una puerta lógica · 2:00
+
+### Ficha oral V3
+
+- **Tiempo:** 2:00.
+- **Objetivo:** explicar existencia y unicidad sin confundirlas con identificación.
+- **Apertura oral:** «Entre “un hombre” y “el hombre” hay una diferencia lógica: el segundo pretende señalar exactamente a uno».
+- **Explicación:** «un F» es ambiguo; «el F», definido. «El F existe» afirma que hay justamente un F. La fórmula ∃!x F(x) es **EXTENSIÓN PEDAGÓGICA**, no notación del capítulo.
+- **Interacción:** contrasta «un estudiante» con «el estudiante que obtuvo la nota más alta» y pide las dos condiciones.
+- **Error que evitar:** saber que existe exactamente un F no significa saber qué individuo es F.
+- **Transición:** «Veamos un caso en que conocemos a todas las personas y aun así no sabemos quién satisface la descripción».
 
 ### En pantalla
 
@@ -503,6 +595,16 @@ Podemos saber que existe exactamente un F sin saber **quién** es F. También es
 
 ## Diapositiva 10 — Conozco a cada candidato. Aún no conozco «al ganador» · 2:00
 
+### Ficha oral V3
+
+- **Tiempo:** 2:00.
+- **Objetivo:** demostrar que familiaridad con un individuo no equivale a identificarlo bajo una descripción.
+- **Apertura oral:** «Conozco a A, B, C, D y E. Sé que uno ganará. ¿Sé ya quién es “el ganador”?».
+- **Explicación:** sabemos que existe un único candidato con más votos, pero aún no conocemos «A es el candidato que obtendrá mayor número de votos» ni una proposición equivalente.
+- **Interacción:** deja elegir una letra y pregunta qué dato justificaría que esa persona es la ganadora.
+- **Error que evitar:** respecto de otra persona, lo directamente conocido son datos sensoriales asociados a su cuerpo, no su cuerpo físico o mente.
+- **Transición:** «Si una descripción puede separarse de la persona, preguntemos qué contiene realmente un nombre propio».
+
 ### En pantalla
 
 > **Conozco a cada candidato. Aún no conozco «al ganador».**
@@ -543,6 +645,16 @@ Podemos saber que existe «la persona que ganó un concurso anónimo» antes de 
 ---
 
 ## Diapositiva 11 — Un solo Bismarck. Varios caminos mentales · 2:30
+
+### Ficha oral V3
+
+- **Tiempo:** 2:30.
+- **Objetivo:** mostrar que el referente puede permanecer mientras varían las descripciones y crece la distancia epistemológica.
+- **Apertura oral:** «Un solo nombre puede activar pensamientos muy distintos sin dejar de pretender el mismo referente».
+- **Explicación:** Bismarck podría apoyarse en el yo; quien lo trató, en datos sensoriales; nosotros, en descripciones históricas y testimonios. Más lejos quedan la máscara de hierro y el hombre más longevo.
+- **Interacción:** pregunta qué aparece al oír «Bertrand Russell» y compara dos respuestas.
+- **Error que evitar:** quien trató a Bismarck no conoció directamente su cuerpo físico o mente; tampoco todos los hablantes comparten el mismo contenido mental.
+- **Transición:** «La distancia puede crecer, pero Russell le impone una condición de significado».
 
 ### En pantalla
 
@@ -596,6 +708,16 @@ La distancia no es solo cantidad de información. Es distancia respecto de un pa
 
 ## Diapositiva 12 — El principio fundamental · 2:30
 
+### Ficha oral V3
+
+- **Tiempo:** 2:30.
+- **Objetivo:** enunciar el principio fundamental y mostrar cómo permite comprender proposiciones sobre individuos ausentes.
+- **Apertura oral:** «Ahora sí, leamos lentamente la frase que Russell llama el principio fundamental».
+- **Explicación:** lee la **CITA de la p. 56**. Sonidos, datos visuales, recuerdos y universales directamente conocidos forman una descripción que refiere a Julio César ausente.
+- **Interacción:** pregunta qué está presente al pensar en César: ¿la persona o sonidos, trazos, recuerdos y conceptos?
+- **Error que evitar:** no marques a César como directo ni trates textos e imágenes físicas como datos directamente conocidos. El principio no limita el discurso a objetos experimentados.
+- **Transición:** «Antes de celebrar el alcance de la referencia, distingamos qué afirma Russell y qué deja abierto».
+
 ### En pantalla
 
 > **«Toda proposición que podamos entender debe estar compuesta exclusivamente por elementos de los cuales tengamos un conocimiento directo.»**
@@ -648,6 +770,16 @@ La descripción no introduce mágicamente a Julio César en la mente. Construye 
 
 ## Diapositiva 13 — No todo tiene el mismo grado de compromiso · 1:30
 
+### Ficha oral V3
+
+- **Tiempo:** 1:30.
+- **Objetivo:** separar afirmación, cautela, desarrollo posterior y problema abierto sin iniciar todavía el coloquio.
+- **Apertura oral:** «Estas cuatro casillas no pesan igual: afirmar, matizar, desarrollar después y dejar abierto no son lo mismo».
+- **Explicación:** Russell afirma la dependencia última de lo directo; presenta el yo como probable; desarrolla después los universales; admite objeciones pendientes. La autoconsciencia animal es una suposición.
+- **Interacción:** pregunta únicamente qué palabra protege la fidelidad respecto del yo. Busca «probable» y continúa.
+- **Error que evitar:** no atribuyas a Russell críticas posteriores ni intentes debatir cuatro objeciones en noventa segundos.
+- **Transición:** «Con esas cautelas, volvamos a la mesa que dejamos esperando desde el comienzo».
+
 ### En pantalla
 
 | Estatuto | Contenido |
@@ -685,6 +817,16 @@ La señal oral debe ser explícita: «Hasta aquí reconstruimos a Russell; desde
 ---
 
 ## Diapositiva 14 — La mesa no se presenta. La alcanzamos. · 1:30
+
+### Ficha oral V3
+
+- **Tiempo:** 1:30.
+- **Objetivo:** responder la pregunta inicial sin confundir datos presentados con contacto directo con la mesa física.
+- **Apertura oral:** «Toquen otra vez la mesa. Ahora sí podemos responder qué conocen y de qué manera».
+- **Explicación:** color, forma y resistencia se presentan; la mesa física se conoce como el objeto que los causa. «Ir más allá de los límites de nuestra experiencia privada» es **CITA, p. 57**; anclaje/alcance sigue siendo **PARÁFRASIS**.
+- **Interacción:** pide completar «directamente conozco…» y «por referencia conozco…». Busca «los datos» y «la mesa física».
+- **Error que evitar:** no hables de contacto directo con el objeto físico ni añadas otra tesis después del cierre.
+- **Transición/cierre:** pausa y termina: «Una experiencia diminuta no nos condena a un mundo diminuto: lo directo nos da anclaje; la referencia, alcance».
 
 ### En pantalla
 
