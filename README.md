@@ -31,8 +31,13 @@ La exposición resume esa arquitectura en una fórmula:
 - `/`: introducción narrativa navegable.
 - `/presentacion`: deck de 14 diapositivas con revelados argumentales, SVG
   adaptativos, enlaces profundos, historial, índice por actos, notas navegables,
-  gestos táctiles y pantalla completa.
+  transiciones semánticas, puntero láser, cronómetro, gestos táctiles y pantalla
+  completa.
 - `/fuentes`: referencia bibliográfica y criterio editorial.
+
+La portada responde al puntero y al avance de lectura, incorpora profundidad 3D
+en los casos y permite reconstruir el ejemplo de la mesa en tres capas. Todo el
+movimiento respeta `prefers-reduced-motion`.
 
 ## Atajos de la presentación
 
@@ -42,6 +47,7 @@ La exposición resume esa arquitectura en una fórmula:
 | `J` / `K` | avanzar / retroceder |
 | `O` o `I` | índice |
 | `S` o `N` | notas del ponente |
+| `L` | activar o desactivar el puntero láser |
 | `F` | pantalla completa |
 | `Home` / `End` | primera / última diapositiva |
 | `Esc` | cerrar panel |
