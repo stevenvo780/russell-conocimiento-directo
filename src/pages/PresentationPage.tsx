@@ -812,9 +812,10 @@ export function PresentationPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby={overlayTitleId}
-            initial={{ opacity: 0 }}
+            initial={prefersReducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
             onClick={(event) => {
               if (event.target === event.currentTarget) closeOverlay();
             }}
@@ -823,10 +824,10 @@ export function PresentationPage() {
               ref={overlayPanel}
               tabIndex={-1}
               className={`overlay-panel overlay-${overlay}`}
-              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 24, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 14, scale: 0.99 }}
-              transition={{ duration: prefersReducedMotion ? 0.01 : 0.24 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: 14, scale: 0.99 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.24 }}
             >
               <header>
                 <div>
