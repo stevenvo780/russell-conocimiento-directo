@@ -3,20 +3,8 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/presentacion",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/presentacion/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/fuentes",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/fuentes/:path*",
-      "destination": "/index.html"
+      "source": "/(.*)",
+      "destination": "/"
     }
   ],
   "headers": [
