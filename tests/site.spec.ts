@@ -34,6 +34,11 @@ test('home communicates the thesis and passes accessibility checks in both theme
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations, `${theme} theme accessibility violations`).toEqual([]);
   }
+
+  const primaryAction = page.getByRole('link', { name: /ver presentación/i });
+  await primaryAction.hover();
+  await expect(primaryAction).toHaveCSS('color', 'rgb(233, 225, 212)');
+  await expect(primaryAction).toHaveCSS('background-color', 'rgb(118, 71, 15)');
 });
 
 test('presentation supports keyboard navigation, presenter notes and a focus-trapped overview', async ({ page }) => {
@@ -226,6 +231,45 @@ test('motion uses a compact profile on narrow or coarse devices and yields to re
   await expect(shell).toHaveAttribute('data-slide-transition-ms', '10');
 });
 
+test('relationship tracing uses real neighbours and clears a pin that becomes future', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Desktop diagram relationship gate');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/presentacion#arquitectura');
+  const stage = page.locator('.deck-stage');
+  await expect(stage).toHaveAttribute('data-slide-id', 'arquitectura');
+  await page.keyboard.press('ArrowRight');
+  await expect(stage).toHaveAttribute('data-reveal-step', '1');
+
+  const tree = page.locator('.slide-visual .knowledge-tree');
+  await tree.locator('[data-node="truths"] .node-surface').click();
+  const treeReadout = tree.locator('.trace-readout');
+  await expect(treeReadout).toContainText(/conocimiento/i);
+  await expect(treeReadout).not.toContainText(/cosas/i);
+
+  await page.goto('/presentacion#mesa');
+  await expect(stage).toHaveAttribute('data-slide-id', 'mesa');
+  for (let reveal = 1; reveal <= 3; reveal += 1) {
+    await page.keyboard.press('ArrowRight');
+    await expect(stage).toHaveAttribute('data-reveal-step', String(reveal));
+  }
+  const table = page.locator('.slide-visual .table-bridge');
+  const certaintyAxes = table.locator('.certainty-axis');
+  await expect(certaintyAxes).toHaveCount(3);
+  for (const axis of await certaintyAxes.all()) {
+    await expect(axis).toHaveAttribute('data-from', 'datos');
+    await expect(axis).toHaveAttribute('data-to', 'mesa');
+  }
+
+  const tableNode = table.locator('[data-node="mesa"]');
+  await tableNode.dispatchEvent('click');
+  await expect(tableNode).toHaveAttribute('data-pinned', 'true');
+  await expect(table).toHaveAttribute('data-tracing', 'true');
+  await page.keyboard.press('ArrowLeft');
+  await expect(tableNode).toHaveAttribute('data-stage-role', 'future');
+  await expect(tableNode).not.toHaveAttribute('data-pinned', 'true');
+  await expect(table).not.toHaveAttribute('data-tracing', 'true');
+});
+
 test('deep links, browser history and overview selection preserve the exact slide', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/presentacion#bismarck');
@@ -317,6 +361,42 @@ test('pages do not create global horizontal overflow', async ({ page }) => {
     await page.goto(route);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow, `overflow at ${route}`).toBeLessThanOrEqual(1);
+  }
+});
+
+test('the deck remains collision-free at the 320px minimum viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/presentacion#descripcion');
+
+  const footer = page.locator('.deck-footer');
+  const previousArrow = footer.locator('.deck-arrow').first();
+  const nextArrow = footer.locator('.deck-arrow').last();
+  const revealSteps = footer.locator('.deck-reveal-steps');
+  await expect(footer.locator('.deck-folio')).toBeHidden();
+
+  const [previousBox, stepsBox, nextBox] = await Promise.all([
+    previousArrow.boundingBox(),
+    revealSteps.boundingBox(),
+    nextArrow.boundingBox(),
+  ]);
+  expect(previousBox).not.toBeNull();
+  expect(stepsBox).not.toBeNull();
+  expect(nextBox).not.toBeNull();
+  if (previousBox && stepsBox && nextBox) {
+    expect(previousBox.x + previousBox.width).toBeLessThanOrEqual(stepsBox.x + 1);
+    expect(stepsBox.x + stepsBox.width).toBeLessThanOrEqual(nextBox.x + 1);
+  }
+
+  await page.goto('/presentacion#universales');
+  await page.keyboard.press('ArrowRight');
+  for (const label of ['relación', 'causar']) {
+    const box = await page.getByText(label, { exact: true }).boundingBox();
+    expect(box, `${label} should be visible at 320px`).not.toBeNull();
+    if (box) {
+      expect(box.x, `${label} starts inside the viewport`).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width, `${label} ends inside the viewport`).toBeLessThanOrEqual(320);
+    }
   }
 });
 

@@ -90,9 +90,11 @@ npm run test:e2e
 ├── public/                Favicon y metadatos estáticos
 ├── src/
 │   ├── components/        Diagramas SVG
+│   ├── hooks/             Presupuesto y secuencias de movimiento
 │   ├── pages/             Portada, deck y fuentes
-│   ├── slides.tsx         Contenido y notas de las 14 diapositivas
-│   └── styles.css         Sistema visual completo
+│   ├── styles/            Sistema visual dividido por superficie
+│   ├── motion.ts          Tokens y perfiles de movimiento
+│   └── slides.tsx         Contenido y notas de las 14 diapositivas
 ├── tests/                 Pruebas E2E y de accesibilidad
 └── vercel.json            Despliegue SPA estático
 ```

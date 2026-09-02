@@ -1,0 +1,988 @@
+/*
+  Deck custom slide content — the bodies that argue without a diagram
+  (cover thesis, colour specimen, universals orbits, César derivation,
+  commitment axis) plus the title cadence of the question and cover slides.
+
+  Motion here is CSS only (the article is a framer orchestrator; nested motion
+  elements would inherit its stagger). Every duration, easing and stagger comes
+  from the `--m-*` tokens on `.deck-shell`; the reduced profile collapses them
+  to 10 ms and zero delay. Transform / opacity only.
+*/
+
+/* ---------- Cadence variables ---------- */
+
+/* Title words start once framer has begun fading the h1 in: delayChildren of the
+   article (opening 450 / act turn 120 / within act 50 ms) plus one part stagger
+   for the eyebrow, plus a short lead. Bodies mount on a reveal step, so they
+   only need a short lead. */
+.deck-stage {
+  --m-title-lead: calc(50ms + var(--m-stagger, 70ms) + 90ms);
+  --m-body-lead: 60ms;
+}
+
+.deck-stage[data-transition='opening'] {
+  --m-title-lead: calc(450ms + var(--m-stagger, 70ms) + 90ms);
+}
+
+.deck-stage[data-transition='act-forward'],
+.deck-stage[data-transition='act-backward'] {
+  --m-title-lead: calc(120ms + var(--m-stagger, 70ms) + 90ms);
+}
+
+.deck-shell[data-motion-profile='reduced'] .deck-stage {
+  --m-title-lead: 0ms;
+  --m-body-lead: 0ms;
+}
+
+/* ---------- Question and cover titles: word cadence, then line masks (motion-3) ---------- */
+
+.title-line {
+  display: block;
+  clip-path: inset(-0.12em -0.06em -0.32em -0.06em);
+}
+
+.title-word {
+  display: inline-block;
+  clip-path: inset(-0.12em -0.08em -0.32em -0.08em);
+}
+
+.title-word,
+.title-line-inner {
+  display: inline-block;
+  animation: title-rise var(--m-d-l) var(--m-ease-settle) both;
+  animation-delay: calc(
+    var(--m-title-lead) + var(--i, 0) * var(--m-stagger-word) +
+      var(--l, 0) * (3 * var(--m-stagger-word) + var(--m-beat))
+  );
+}
+
+/* The cover has no word level: line two follows line one by two part staggers. */
+.slide-cover .title-line-inner {
+  animation-delay: calc(var(--m-title-lead) + var(--l, 0) * 2 * var(--m-stagger));
+}
+
+@keyframes title-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.4em);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Body choreography (motion-11): order carries the argument ---------- */
+
+.slide-body :where(
+    .cover-thesis > *,
+    .color-swatch,
+    .color-truths > *,
+    .epistemic-brace,
+    .universal-core,
+    .universal,
+    .universal-outer,
+    .caesar-chain > li,
+    .tension-grid article
+  ) {
+  animation: body-rise var(--m-d-m) var(--m-ease-settle) both;
+  animation-delay: calc(var(--m-body-lead) + var(--i, 0) * var(--m-stagger));
+}
+
+@keyframes body-rise {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--m-rise, 28px) * 0.36));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes body-settle {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes body-slide-x {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--m-rise, 28px) * -0.57));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes body-appear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes body-extend-x {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes body-extend-y {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: none;
+  }
+}
+
+/* Words are placed with `transform`, so their arrival uses the `translate` property
+   (composes with the placement) and pulls each word outward from the core. */
+@keyframes body-radiate {
+  from {
+    opacity: 0;
+    translate: calc(cos(var(--a, 0deg)) * var(--m-rise, 28px) * -0.8)
+      calc(sin(var(--a, 0deg)) * var(--m-rise, 28px) * -0.8);
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes orbit-in {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* ---------- Cover thesis (editorial-10, cover part) ---------- */
+
+.cover-thesis {
+  display: grid;
+  grid-template-columns: auto 72px auto;
+  justify-content: center;
+  align-items: center;
+  column-gap: 1rem;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.4vw, 1.3rem);
+  font-style: italic;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.cover-thesis i {
+  width: 72px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--direct), var(--reference));
+  animation-name: body-extend-x;
+  transform-origin: center;
+}
+
+.cover-thesis small {
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-top: 0.5rem;
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.is-presented {
+  color: var(--direct-bright);
+}
+
+.is-referred {
+  color: var(--reference-bright);
+}
+
+/* ---------- Colour specimen page (editorial-06) ---------- */
+
+.color-proposition {
+  --specimen-col: minmax(180px, 280px);
+  --specimen-gap: clamp(1.5rem, 4vw, 3.5rem);
+  display: grid;
+  grid-template-columns: var(--specimen-col) 1px minmax(0, 1fr);
+  width: min(960px, 100%);
+  margin-inline: auto;
+  column-gap: var(--specimen-gap);
+  row-gap: 1.4rem;
+  align-items: center;
+}
+
+/* The hairline between the thing and the sentences about it. */
+.color-proposition::after {
+  content: '';
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  background: var(--line);
+}
+
+.color-swatch {
+  grid-column: 1;
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 1;
+  justify-self: center;
+  background:
+    radial-gradient(circle at 37% 30%, rgba(255, 255, 255, 0.28), transparent 13%),
+    linear-gradient(145deg, #b1743f, #57351f 55%, #2e1d16);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 40px 90px -40px rgba(177, 116, 63, 0.6);
+  animation-name: body-settle;
+}
+
+.color-truths {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  counter-reset: truth;
+  text-align: left;
+}
+
+.color-truths span {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.3rem;
+  color: var(--direct-bright);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3vw, 3rem);
+  font-style: italic;
+  line-height: 1.05;
+}
+
+/* Solid amber dot: the thing is presented. */
+.color-truths span::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--direct);
+}
+
+.color-truths strong {
+  counter-increment: truth;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.35em 0;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 2.4vw, 2.3rem);
+  font-weight: 400;
+  line-height: 1.15;
+  border-bottom: 1px solid var(--line);
+  animation-name: body-slide-x;
+}
+
+/* V1 / V2: these are propositions, numbered like a specimen page. */
+.color-truths strong::before {
+  content: 'V' counter(truth);
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.epistemic-brace {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: var(--specimen-col) 1px minmax(0, 1fr);
+  column-gap: var(--specimen-gap);
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.epistemic-brace span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.epistemic-brace span:first-child {
+  justify-self: center;
+}
+
+.epistemic-brace span:last-child {
+  grid-column: 3;
+}
+
+.epistemic-brace span::before {
+  content: '';
+  flex: none;
+  box-sizing: border-box;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--direct);
+}
+
+/* Hollow neutral ring: the truths are added, not shown. */
+.epistemic-brace span:last-child::before {
+  background: none;
+  border: 1px solid var(--muted);
+}
+
+/* ---------- Universals as two orbits around CONCEBIR (editorial-07) ---------- */
+
+.universal-field {
+  --rx: min(36vw, 400px);
+  --ry: min(19vh, 165px);
+  position: relative;
+  display: grid;
+  width: min(920px, 100%);
+  height: min(48vh, 440px);
+  min-height: 300px;
+  margin-inline: auto;
+  place-items: center;
+}
+
+.universal-field::before,
+.universal-field::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: orbit-in var(--m-d-l) var(--m-ease-out) both;
+  animation-delay: var(--m-body-lead);
+}
+
+/* Amber orbit: universals we are directly acquainted with. */
+.universal-field::before {
+  width: calc(var(--rx) * 2);
+  height: calc(var(--ry) * 2);
+  border: 1px solid color-mix(in srgb, var(--direct) 45%, transparent);
+}
+
+/* Dashed teal orbit: the many known only by description. */
+.universal-field::after {
+  width: calc(var(--rx) * 2.5);
+  height: calc(var(--ry) * 2.45);
+  border: 1px dashed color-mix(in srgb, var(--reference) 45%, transparent);
+  animation-delay: calc(var(--m-body-lead) + 6 * var(--m-stagger));
+}
+
+.universal-core {
+  display: flex;
+  width: 150px;
+  height: 150px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--paper-strong);
+  background: var(--bg-deep);
+  border: 1px solid var(--direct);
+  border-radius: 50%;
+  box-shadow: 0 0 60px var(--direct-soft);
+  animation-name: body-settle;
+}
+
+.universal-core strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.universal-core span {
+  margin-top: 0.3rem;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+/* Each word sits on the amber orbit, knocked out of the line. */
+.universal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  padding: 0.05em 0.4em;
+  color: var(--direct-bright);
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.1vw, 2rem);
+  font-style: italic;
+  line-height: 1.1;
+  background: var(--bg-deep);
+  transform: translate(-50%, -50%)
+    translate(calc(cos(var(--a)) * var(--rx)), calc(sin(var(--a)) * var(--ry)));
+  animation-name: body-radiate;
+}
+
+.u1 { --a: -125deg; }
+.u2 { --a: -55deg; }
+.u3 { --a: 125deg; }
+.u4 { --a: 55deg; }
+.u5 { --a: 180deg; }
+.u6 { --a: 0deg; }
+
+.universal-outer {
+  --a: 33deg;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  padding: 0 0.4em;
+  color: var(--reference-bright);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption, 0.68rem);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: var(--bg-deep);
+  transform: translate(-50%, -50%)
+    translate(calc(cos(var(--a)) * var(--rx) * 1.25), calc(sin(var(--a)) * var(--ry) * 1.225));
+  animation-name: body-appear;
+}
+
+/* ---------- Descripción: the formula only fades, its box never moves ---------- */
+
+.logic-formula {
+  color: var(--reference-bright);
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3vw, 2.6rem);
+  font-style: italic;
+}
+
+.slide-body > .logic-formula {
+  animation: body-appear var(--m-d-m) var(--m-ease-out) both;
+  animation-delay: var(--m-body-lead);
+}
+
+/* ---------- Principio: the three-step derivation (editorial-08) ---------- */
+
+.caesar-chain {
+  --chain-gutter: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.caesar-chain li {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--chain-gutter) minmax(0, 1fr);
+  column-gap: 0.6rem;
+  padding-bottom: 1.5rem;
+}
+
+.caesar-chain li:last-child {
+  padding-bottom: 0;
+}
+
+/* Marker: filled when the link is present, hollow when the referent is absent. */
+.caesar-chain li::before {
+  content: '';
+  grid-column: 1;
+  grid-row: 1;
+  box-sizing: border-box;
+  width: 9px;
+  height: 9px;
+  margin-top: 0.12rem;
+  justify-self: center;
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.caesar-chain li[data-step='presentes']::before {
+  background: var(--direct);
+}
+
+.caesar-chain li[data-step='ausente']::before {
+  background: none;
+  border: 1px solid var(--reference-bright);
+}
+
+/* Connector: the hairline that joins one step to the next, drawn top-down. */
+.caesar-chain li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(0.12rem + 13px);
+  bottom: -0.1rem;
+  left: calc(var(--chain-gutter) / 2 - 0.5px);
+  width: 1px;
+  background: var(--line-strong);
+  transform-origin: top;
+  animation: body-extend-y var(--m-d-m) var(--m-ease-out) both;
+  animation-delay: calc(var(--m-body-lead) + (var(--i, 0) + 1) * var(--m-stagger));
+}
+
+.caesar-chain small {
+  grid-column: 2;
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.caesar-chain span {
+  grid-column: 2;
+  display: block;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 1.4vw, 1.35rem);
+  line-height: 1.3;
+}
+
+.caesar-chain li[data-step='presentes'] span {
+  color: var(--direct-bright);
+}
+
+.caesar-chain li[data-step='descripcion'] span {
+  font-style: italic;
+}
+
+/* The absent referent: outline type, no fill, and it never travels. */
+.caesar-chain li[data-step='ausente'] {
+  animation-name: body-appear;
+}
+
+.caesar-chain li[data-step='ausente'] span {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--reference-bright);
+  font-size: clamp(1.7rem, 2.7vw, 2.7rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* ---------- Cautelas: the commitment axis (editorial-09) ---------- */
+
+.tension-grid {
+  --axis-offset: 2.4rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: min(1120px, 100%);
+  margin: 1.4rem auto 0;
+  padding-top: var(--axis-offset);
+  column-gap: clamp(1rem, 3vw, 3rem);
+}
+
+/* The axis: amber (asserted) to paper to rose (open question). */
+.tension-grid::before {
+  content: '';
+  position: absolute;
+  top: 0.45rem;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--direct), var(--paper) 52%, var(--danger));
+  opacity: 0.55;
+}
+
+.tension-axis-label {
+  position: absolute;
+  top: -1rem;
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tension-axis-label[data-end='end'] {
+  right: 0;
+}
+
+.tension-grid article {
+  position: relative;
+  text-align: left;
+}
+
+/* Marker on the axis: how far Russell commits. */
+.tension-grid article::before {
+  content: '';
+  position: absolute;
+  top: calc(0.45rem - var(--axis-offset) - 8px);
+  left: 0;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.tension-grid article[data-commitment='afirma']::before {
+  background: var(--direct);
+}
+
+.tension-grid article[data-commitment='matiza']::before {
+  background: linear-gradient(90deg, var(--direct) 50%, transparent 50%);
+  border: 1px solid var(--direct);
+}
+
+.tension-grid article[data-commitment='despues']::before {
+  background: radial-gradient(circle, var(--paper) 2px, transparent 2.5px);
+  border: 1.5px solid var(--paper);
+}
+
+.tension-grid article[data-commitment='abre']::before {
+  border: 1.5px dashed var(--danger);
+}
+
+/* ABRE waits a beat: the open question arrives last. */
+.tension-grid article[data-beat] {
+  animation-delay: calc(var(--m-body-lead) + 3 * var(--m-stagger) + var(--m-beat));
+}
+
+.tension-grid article > span {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tension-grid article[data-commitment='afirma'] > span,
+.tension-grid article[data-commitment='matiza'] > span {
+  color: var(--direct);
+}
+
+.tension-grid article[data-commitment='despues'] > span {
+  color: var(--muted);
+}
+
+.tension-grid article[data-commitment='abre'] > span {
+  color: var(--danger);
+}
+
+.tension-grid strong {
+  display: block;
+  margin-top: 0.6rem;
+  color: var(--paper-strong);
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.1vw, 2rem);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.tension-grid p {
+  max-width: 26ch;
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+  font-style: italic;
+  line-height: 1.45;
+}
+
+/* ---------- Responsive ---------- */
+
+/* Narrower stages: the outer label moves down its orbit so it never reaches the stage edge. */
+@media (max-width: 1300px) {
+  .universal-outer {
+    --a: 72deg;
+  }
+}
+
+@media (max-width: 980px) {
+  /* Tablet band and below: the axis turns vertical and the four claims stack;
+     the bottom padding keeps the end label inside the slide. */
+  .tension-grid {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 1.1rem;
+    margin-top: 1.6rem;
+    padding: 0.2rem 0 1.5rem 1.8rem;
+  }
+
+  .tension-grid::before {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    left: 7px;
+    width: 1px;
+    height: auto;
+    background: linear-gradient(180deg, var(--direct), var(--paper) 52%, var(--danger));
+  }
+
+  .tension-grid article::before {
+    top: 0.2rem;
+    left: -1.8rem;
+  }
+
+  .tension-axis-label {
+    top: -1.2rem;
+    left: 0;
+  }
+
+  /* The end label sits inside the grid's bottom padding; the axis stops above it. */
+  .tension-axis-label[data-end='end'] {
+    top: auto;
+    right: auto;
+    bottom: 0;
+  }
+
+  .tension-grid::before {
+    bottom: 1.1rem;
+  }
+}
+
+/* Tablet band only: each commitment is a ledger row (label and claim left, gloss right) so the width is used. */
+@media (min-width: 681px) and (max-width: 980px) {
+  .tension-grid {
+    width: min(760px, 100%);
+    row-gap: 1.4rem;
+  }
+
+  .tension-grid article {
+    display: grid;
+    grid-template-areas: 'label gloss' 'claim gloss';
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 1.5rem;
+    align-items: start;
+  }
+
+  .tension-grid article > span {
+    grid-area: label;
+  }
+
+  .tension-grid strong {
+    grid-area: claim;
+    margin-top: 0.35rem;
+  }
+
+  .tension-grid p {
+    grid-area: gloss;
+    max-width: 40ch;
+    margin-top: 0.15rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .cover-thesis {
+    grid-template-columns: auto 40px auto;
+    column-gap: 0.6rem;
+    font-size: 0.95rem;
+  }
+
+  .cover-thesis i {
+    width: 40px;
+  }
+
+  .color-proposition {
+    --specimen-col: 96px;
+    --specimen-gap: 0.9rem;
+    row-gap: 1rem;
+  }
+
+  .color-swatch {
+    max-width: 96px;
+  }
+
+  .color-truths span {
+    font-size: 1.5rem;
+  }
+
+  .color-truths strong {
+    font-size: 1.2rem;
+  }
+
+  /* Under the narrow swatch column the brace stacks into two left-aligned lines. */
+  .epistemic-brace {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.3rem;
+    font-size: 0.5rem;
+  }
+
+  .epistemic-brace span:first-child {
+    justify-self: start;
+  }
+
+  .epistemic-brace span:last-child {
+    grid-column: 1;
+  }
+
+  .universal-field {
+    --rx: min(140px, calc(50vw - 50px));
+    --ry: 105px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    height: 290px;
+    min-height: 0;
+  }
+
+  .universal-field::after {
+    display: none;
+  }
+
+  .universal-core {
+    grid-row: 1;
+    width: 112px;
+    height: 112px;
+  }
+
+  .universal-core strong {
+    font-size: 0.8rem;
+  }
+
+  .universal-core span {
+    font-size: 0.78rem;
+  }
+
+  .universal {
+    font-size: 1.05rem;
+  }
+
+  /* The outer orbit is gone on phones; its label becomes a plain caption below. */
+  .universal-outer {
+    position: static;
+    grid-row: 2;
+    justify-self: center;
+    transform: none;
+  }
+
+  /* The formula is the payoff of the slide: on phones it is one line under the caption. */
+  .logic-formula {
+    font-size: 1.3rem;
+  }
+
+  .caesar-chain li {
+    padding-bottom: 1.1rem;
+  }
+
+  .caesar-chain span {
+    font-size: 0.95rem;
+  }
+
+  .caesar-chain li[data-step='ausente'] span {
+    font-size: 1.5rem;
+  }
+
+  .tension-grid {
+    row-gap: 0.9rem;
+  }
+
+  .tension-grid strong {
+    font-size: 1.25rem;
+  }
+
+  .tension-grid p {
+    max-width: none;
+    font-size: 0.92rem;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 681px) {
+  .color-proposition {
+    --specimen-col: minmax(150px, 200px);
+    row-gap: 1rem;
+  }
+
+  .color-swatch {
+    max-width: 200px;
+  }
+
+  .universal-field {
+    --ry: min(15vh, 140px);
+    height: 38vh;
+    min-height: 260px;
+  }
+
+  .universal-core {
+    width: 130px;
+    height: 130px;
+  }
+
+  .tension-grid {
+    --axis-offset: 2rem;
+    margin-top: 1rem;
+  }
+}
+
+/* Phone landscape: the stage scrolls, so the orbits take a fixed height. */
+@media (max-height: 520px) and (min-width: 681px) {
+  .universal-field {
+    --rx: min(34vw, 360px);
+    --ry: 100px;
+    height: 300px;
+    min-height: 0;
+  }
+
+  .universal-core {
+    width: 112px;
+    height: 112px;
+  }
+
+  .tension-grid {
+    --axis-offset: 1.8rem;
+    margin-top: 0.8rem;
+  }
+}
+
+@media print {
+  .title-line,
+  .title-word {
+    clip-path: none;
+  }
+
+  .title-word,
+  .title-line-inner,
+  .slide-body *,
+  .slide-body,
+  .universal-field::before,
+  .universal-field::after,
+  .caesar-chain li::after {
+    animation: none !important;
+  }
+}

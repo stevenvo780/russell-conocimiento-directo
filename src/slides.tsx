@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import {
   AnchorReach,
   BismarckDistance,
@@ -25,6 +25,11 @@ export type Slide = {
   variant?: 'question' | 'cover' | 'split' | 'visual' | 'quote' | 'closing';
   notes: ReactNode;
 };
+
+/** Inline custom properties (`--i` arrival order, `--l` title line) under strict TS. */
+function cssVars(vars: Record<`--${string}`, string | number>): CSSProperties {
+  return vars as CSSProperties;
+}
 
 type SpeakerNotesProps = {
   slideId: string;
@@ -88,9 +93,16 @@ export const slides: Slide[] = [
     eyebrow: '00 · Un experimento de diez segundos',
     title: (
       <>
-        Toca la mesa.
-        <br />
-        ¿Qué conoces <em>realmente</em>?
+        <span className="title-line" style={cssVars({ '--l': 0 })}>
+          <span className="title-word" style={cssVars({ '--i': 0 })}>Toca</span>{' '}
+          <span className="title-word" style={cssVars({ '--i': 1 })}>la</span>{' '}
+          <span className="title-word" style={cssVars({ '--i': 2 })}>mesa.</span>
+        </span>{' '}
+        <span className="title-line" style={cssVars({ '--l': 1 })}>
+          <span className="title-line-inner">
+            ¿Qué conoces <em>realmente</em>?
+          </span>
+        </span>
       </>
     ),
     subtitle: '¿El objeto físico… o color, forma, dureza y resistencia?',
@@ -131,17 +143,23 @@ export const slides: Slide[] = [
     eyebrow: 'Bertrand Russell · Los problemas de la filosofía · capítulo 5',
     title: (
       <>
-        La arquitectura
-        <br />
-        <span className="accent-title">de lo ausente</span>
+        <span className="title-line" style={cssVars({ '--l': 0 })}>
+          <span className="title-line-inner">La arquitectura</span>
+        </span>{' '}
+        <span className="title-line" style={cssVars({ '--l': 1 })}>
+          <span className="title-line-inner">
+            <span className="accent-title">de lo ausente</span>
+          </span>
+        </span>
       </>
     ),
     subtitle: 'Cómo una experiencia diminuta puede abrirnos un mundo inmenso',
     body: (
       <div className="cover-thesis">
-        <span>DIRECTO = ANCLAJE</span>
-        <i aria-hidden="true" />
-        <span>REFERENCIA = ALCANCE</span>
+        <span className="is-presented" style={cssVars({ '--i': 0 })}>directo = anclaje</span>
+        <i aria-hidden="true" style={cssVars({ '--i': 1 })} />
+        <span className="is-referred" style={cssVars({ '--i': 2 })}>referencia = alcance</span>
+        <small style={cssVars({ '--i': 3 })}>paráfrasis · no es cita</small>
       </div>
     ),
     variant: 'cover',
@@ -174,7 +192,7 @@ export const slides: Slide[] = [
     eyebrow: 'ACTO I · Presencia · 01',
     title: 'Russell abre una grieta en la palabra «conocer»',
     subtitle: 'Conocer una cosa no es lo mismo que conocer verdades sobre ella.',
-    visual: <KnowledgeTree compact />,
+    visual: <KnowledgeTree compact arrival="scripted" />,
     variant: 'visual',
     notes: (
       <SpeakerNotes
@@ -209,15 +227,20 @@ export const slides: Slide[] = [
     title: 'El color no depende de la frase',
     body: (
       <div className="color-proposition">
-        <div className="color-swatch" role="img" aria-label="Muestra visual de un matiz castaño" />
+        <div
+          className="color-swatch"
+          role="img"
+          aria-label="Muestra visual de un matiz castaño"
+          style={cssVars({ '--i': 0 })}
+        />
         <div className="color-truths">
-          <span>el matiz</span>
-          <strong>«es castaño»</strong>
-          <strong>«es oscuro»</strong>
+          <span style={cssVars({ '--i': 1 })}>el matiz</span>
+          <strong style={cssVars({ '--i': 2 })}>«es castaño»</strong>
+          <strong style={cssVars({ '--i': 3 })}>«es oscuro»</strong>
         </div>
-        <div className="epistemic-brace">
-          <span>cosa presentada</span>
-          <span>verdades sobre ella</span>
+        <div className="epistemic-brace" style={cssVars({ '--i': 4 })}>
+          <span>cosa presentada · se muestra</span>
+          <span>verdades sobre ella · se añaden</span>
         </div>
       </div>
     ),
@@ -257,7 +280,7 @@ export const slides: Slide[] = [
     },
     eyebrow: 'ACTO I · Presencia · 03',
     title: 'Aquí ocurre el salto',
-    visual: <TableBridge compact />,
+    visual: <TableBridge compact arrival="scripted" />,
     subtitle: 'Datos presentes → verdad puente → objeto físico descrito',
     variant: 'visual',
     notes: (
@@ -294,7 +317,7 @@ export const slides: Slide[] = [
     },
     eyebrow: 'ACTO I · Presencia · 04',
     title: 'Lo directo es más amplio que este instante',
-    visual: <DirectConstellation compact />,
+    visual: <DirectConstellation compact arrival="scripted" />,
     subtitle: 'Sensación · memoria · introspección · yo probable · universales',
     variant: 'visual',
     notes: (
@@ -337,7 +360,7 @@ export const slides: Slide[] = [
     },
     eyebrow: 'ACTO I · Presencia · 05',
     title: 'Encuentro pensamientos. ¿Encuentro al pensador?',
-    visual: <SubjectRelation compact />,
+    visual: <SubjectRelation compact arrival="scripted" />,
     subtitle: 'La relación parece exigir un sujeto; no demuestra una persona permanente.',
     variant: 'visual',
     notes: (
@@ -372,18 +395,19 @@ export const slides: Slide[] = [
       <div
         className="universal-field"
         role="img"
-        aria-label="Concebir significa aprehender un universal; alrededor aparecen blancura, diversidad, fraternidad, semejanza, relación y causar"
+        aria-label="Concebir significa aprehender un universal; en una órbita ámbar alrededor aparecen blancura, diversidad, fraternidad, semejanza, relación y causar, conocidos directamente; una órbita exterior punteada indica los universales conocidos solo por referencia"
       >
-        <span className="universal u1">blancura</span>
-        <span className="universal u2">diversidad</span>
-        <span className="universal u3">fraternidad</span>
-        <span className="universal u4">semejanza</span>
-        <span className="universal u5">relación</span>
-        <span className="universal u6">causar</span>
-        <div className="universal-core">
-          <strong>CONCEBIR</strong>
+        <div className="universal-core" style={cssVars({ '--i': 0 })}>
+          <strong>Concebir</strong>
           <span>aprehender un universal</span>
         </div>
+        <span className="universal u1" style={cssVars({ '--i': 1 })}>blancura</span>
+        <span className="universal u2" style={cssVars({ '--i': 2 })}>diversidad</span>
+        <span className="universal u3" style={cssVars({ '--i': 3 })}>fraternidad</span>
+        <span className="universal u4" style={cssVars({ '--i': 4 })}>semejanza</span>
+        <span className="universal u5" style={cssVars({ '--i': 5 })}>relación</span>
+        <span className="universal u6" style={cssVars({ '--i': 6 })}>causar</span>
+        <small className="universal-outer" style={cssVars({ '--i': 7 })}>muchos otros · solo por referencia</small>
       </div>
     ),
     subtitle: 'Sin términos generales no habría una sola oración completa.',
@@ -416,7 +440,7 @@ export const slides: Slide[] = [
     },
     eyebrow: 'ACTO II · Distancia · 07',
     title: 'La palabra «el» abre una puerta lógica',
-    visual: <DescriptionGate compact />,
+    visual: <DescriptionGate compact arrival="scripted" />,
     body: <div className="logic-formula" role="img" aria-label="Existe exactamente un x tal que x es F">∃!x F(x)</div>,
     subtitle: 'No basta con que exista un F: debe existir uno y solo uno.',
     variant: 'visual',
@@ -449,7 +473,7 @@ export const slides: Slide[] = [
     },
     eyebrow: 'ACTO II · Distancia · 08',
     title: 'Conozco a cada candidato. Aún no conozco «al ganador»',
-    visual: <CandidateParadox compact />,
+    visual: <CandidateParadox compact arrival="scripted" />,
     subtitle: 'Familiaridad con las personas ≠ identificación bajo una descripción',
     variant: 'visual',
     notes: (
@@ -485,7 +509,7 @@ export const slides: Slide[] = [
     },
     eyebrow: 'ACTO II · Distancia · 09',
     title: 'Un solo Bismarck. Varios caminos mentales',
-    visual: <BismarckDistance compact />,
+    visual: <BismarckDistance compact arrival="scripted" />,
     subtitle: 'El referente puede permanecer aunque cambie la descripción que lo alcanza.',
     variant: 'visual',
     notes: (
@@ -528,13 +552,20 @@ export const slides: Slide[] = [
       </>
     ),
     body: (
-      <div className="caesar-chain">
-        <span>particulares + universales conocidos</span>
-        <i aria-hidden="true">→</i>
-        <span>«El hombre que fue asesinado en los Idus de marzo»</span>
-        <i aria-hidden="true">→</i>
-        <span>JULIO CÉSAR AUSENTE</span>
-      </div>
+      <ol className="caesar-chain">
+        <li data-step="presentes" style={cssVars({ '--i': 0 })}>
+          <small>1 · presentes</small>
+          <span>particulares + universales conocidos</span>
+        </li>
+        <li data-step="descripcion" style={cssVars({ '--i': 2 })}>
+          <small>2 · descripción</small>
+          <span>«El hombre que fue asesinado en los Idus de marzo»</span>
+        </li>
+        <li data-step="ausente" style={cssVars({ '--i': 4 })}>
+          <small>3 · referente ausente</small>
+          <span>Julio César</span>
+        </li>
+      </ol>
     ),
     variant: 'quote',
     notes: (
@@ -573,22 +604,24 @@ export const slides: Slide[] = [
     title: 'No todo tiene el mismo grado de compromiso',
     body: (
       <div className="tension-grid">
-        <article>
+        <span className="tension-axis-label" data-end="start">compromiso pleno</span>
+        <span className="tension-axis-label" data-end="end">cuestión abierta</span>
+        <article data-commitment="afirma" style={cssVars({ '--i': 0 })}>
           <span>AFIRMA</span>
           <strong>Dos vías</strong>
           <p>Lo directo funda; la referencia implica verdades.</p>
         </article>
-        <article>
+        <article data-commitment="matiza" style={cssVars({ '--i': 1 })}>
           <span>MATIZA</span>
           <strong>El yo</strong>
           <p>Probable, pero no prudente llamarlo indudable.</p>
         </article>
-        <article>
+        <article data-commitment="despues" style={cssVars({ '--i': 2 })}>
           <span>DESPUÉS</span>
           <strong>Universales</strong>
           <p>Los desarrolla después; aquí fija su función.</p>
         </article>
-        <article>
+        <article data-commitment="abre" data-beat="true" style={cssVars({ '--i': 3 })}>
           <span>ABRE</span>
           <strong>Objeciones</strong>
           <p>Admite que el principio aún debe defenderse.</p>
@@ -624,7 +657,7 @@ export const slides: Slide[] = [
     },
     eyebrow: 'ACTO III · Alcance · 12 · Respuesta',
     title: 'La mesa no se presenta. La alcanzamos.',
-    visual: <AnchorReach compact />,
+    visual: <AnchorReach compact arrival="scripted" />,
     subtitle: 'El dato ancla; las verdades y descripciones extienden el conocimiento.',
     variant: 'closing',
     notes: (

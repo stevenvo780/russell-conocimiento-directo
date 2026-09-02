@@ -10,11 +10,23 @@ import {
   useState,
 } from 'react';
 import { Link } from 'react-router-dom';
+import { useMotionBudget } from '../hooks/useMotionBudget';
+import { useStageArrival } from '../hooks/useStageArrival';
+import {
+  EASE,
+  MOTION,
+  type MotionProfile,
+  motionVars,
+  sec,
+  slideExitMs,
+  slideTransitionMs,
+  type TransitionKind,
+  transitioningMs,
+} from '../motion';
 import { slides } from '../slides';
 
 type Overlay = 'index' | 'notes' | 'help' | null;
 type HistoryMode = 'push' | 'replace' | 'none';
-type TransitionKind = 'opening' | 'within-act' | 'act-forward' | 'act-backward' | 'direct-jump';
 type NotesScale = 'compact' | 'comfortable' | 'large';
 type SlideMotionContext = {
   travel: number;
@@ -100,6 +112,8 @@ const visualStagePlans: Record<string, readonly VisualStageSpec[]> = {
   ],
 };
 
+const actNumerals = ['·', 'I', 'II', 'III'] as const;
+
 function sectionFor(index: number) {
   return sections.find((section) => index >= section.start && index <= section.end) ?? sections[0];
 }
@@ -181,12 +195,36 @@ function useCompactMotion() {
   return compact;
 }
 
+/*
+  Laser trail (interaction-06): the last samples of the pointer, in stage pixels,
+  kept in a ring buffer and redrawn by a rAF loop that stops itself once every
+  sample has faded. Samples closer than TRAIL_MIN_STEP px to the previous one are
+  dropped so a resting pointer does not accumulate a blob.
+*/
+const TRAIL_CAPACITY = 32;
+const TRAIL_LIFE_MS = 420;
+const TRAIL_WIDTH = 8;
+const TRAIL_MIN_STEP = 2;
+const TRAIL_MAX_DPR = 1.5;
+
+type TrailState = {
+  samples: Float32Array;
+  head: number;
+  count: number;
+  frame: number | null;
+};
+
+/* Chrome auto-hide in fullscreen (interaction-07). */
+const CHROME_HIDE_MS = 2600;
+const CHROME_WAKE_BAND_PX = 88;
+
 export function PresentationPage() {
   const [index, setIndex] = useState(initialSlideIndex);
   const [direction, setDirection] = useState(1);
   const [revealStep, setRevealStep] = useState(0);
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [chromeHidden, setChromeHidden] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [transitionKind, setTransitionKind] = useState<TransitionKind>('opening');
   const [laserEnabled, setLaserEnabled] = useState(false);
@@ -195,13 +233,28 @@ export function PresentationPage() {
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
   const [notesScale, setNotesScale] = useState<NotesScale>('comfortable');
+  const [transitioning, setTransitioning] = useState(false);
+  const [washTick, setWashTick] = useState(0);
   const prefersReducedMotion = useReducedMotion();
   const usesCompactMotion = useCompactMotion();
+  const motionBudget = useMotionBudget({ overlayOpen: Boolean(overlay) });
   const indexRef = useRef(index);
+  // The visual is held as state so the arrival hook runs on the commit that mounts it.
+  const [visualElement, setVisualElement] = useState<HTMLDivElement | null>(null);
+  // The footnote rail follows the slide once the outgoing one has left, not the keypress.
+  const [railIndex, setRailIndex] = useState(index);
   const revealStepRef = useRef(revealStep);
   const touchOrigin = useRef<{ x: number; y: number; startedAt: number } | null>(null);
   const overlayPanel = useRef<HTMLElement>(null);
   const stage = useRef<HTMLElement>(null);
+  const shell = useRef<HTMLElement>(null);
+  const trailCanvas = useRef<HTMLCanvasElement>(null);
+  const trail = useRef<TrailState>({
+    samples: new Float32Array(TRAIL_CAPACITY * 3),
+    head: 0,
+    count: 0,
+    frame: null,
+  });
   const restoreFocus = useRef<HTMLElement | null>(null);
   const pendingStageFocus = useRef(false);
   const copyStatusTimer = useRef<number | null>(null);
@@ -225,7 +278,21 @@ export function PresentationPage() {
   const actProgress = (index - currentSection.start + 1) / (currentSection.end - currentSection.start + 1);
   const notesScales: NotesScale[] = ['compact', 'comfortable', 'large'];
   const notesScaleIndex = notesScales.indexOf(notesScale);
-  const motionProfile = prefersReducedMotion ? 'reduced' : usesCompactMotion ? 'compact' : 'spatial';
+  const motionProfile: MotionProfile = prefersReducedMotion ? 'reduced' : usesCompactMotion ? 'compact' : 'spatial';
+  const bodyArea: 'body' | 'foot' = current.visual && current.body ? 'foot' : 'body';
+  const actNumeral = actNumerals[currentSectionIndex] ?? '·';
+  const isActTurn = transitionKind === 'act-forward' || transitionKind === 'act-backward';
+  const revealComplete = revealCount > 0 && revealStep === revealCount;
+  const deckComplete = revealComplete && index === slides.length - 1;
+  // The trail is a decoration on top of the dot: only run while the deck has a frame budget.
+  const trailEnabled = laserEnabled && motionBudget.fps > 0;
+
+  useStageArrival(visualElement, {
+    slideId: current.id,
+    threshold: activeVisualStage?.threshold ?? 0,
+    stages: visualStages.map((stageSpec) => stageSpec.threshold),
+    profile: motionProfile,
+  });
 
   const updateRevealStep = useCallback((nextStep: number) => {
     const bounded = Math.max(0, Math.min(revealCountFor(indexRef.current), nextStep));
@@ -306,15 +373,86 @@ export function PresentationPage() {
     );
   }, [laserEnabled]);
 
+  const clearTrail = useCallback(() => {
+    const state = trail.current;
+    if (state.frame !== null) {
+      cancelAnimationFrame(state.frame);
+      state.frame = null;
+    }
+    state.head = 0;
+    state.count = 0;
+    const canvas = trailCanvas.current;
+    const context = canvas?.getContext('2d');
+    if (canvas && context) context.clearRect(0, 0, canvas.width, canvas.height);
+  }, []);
+
+  const drawTrail = useCallback(() => {
+    const state = trail.current;
+    state.frame = null;
+    const canvas = trailCanvas.current;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return;
+    const { samples } = state;
+    const now = performance.now();
+    // Age out the oldest samples first; the loop ends once nothing is left to fade.
+    while (state.count > 0) {
+      const oldest = ((state.head - state.count + TRAIL_CAPACITY) % TRAIL_CAPACITY) * 3;
+      if (now - samples[oldest + 2] > TRAIL_LIFE_MS) state.count -= 1;
+      else break;
+    }
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    // A lone sample draws nothing; it waits for the next one (or ages out above).
+    if (state.count < 2) return;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    // Strokes are opaque so overlapping round caps never stack into beads; the
+    // fade comes from scaling the colour toward black, which the canvas's
+    // `mix-blend-mode: screen` renders as transparent. Oldest first, so each
+    // newer (wider, brighter) cap covers the joint.
+    const first = (state.head - state.count + TRAIL_CAPACITY) % TRAIL_CAPACITY;
+    for (let i = 1; i < state.count; i += 1) {
+      const from = ((first + i - 1) % TRAIL_CAPACITY) * 3;
+      const to = ((first + i) % TRAIL_CAPACITY) * 3;
+      const life = 1 - (now - samples[to + 2]) / TRAIL_LIFE_MS;
+      if (life <= 0) continue;
+      context.lineWidth = TRAIL_WIDTH * life;
+      context.strokeStyle = `rgb(${Math.round(255 * life)}, ${Math.round(76 * life)}, ${Math.round(94 * life)})`;
+      context.beginPath();
+      context.moveTo(samples[from], samples[from + 1]);
+      context.lineTo(samples[to], samples[to + 1]);
+      context.stroke();
+    }
+    state.frame = requestAnimationFrame(drawTrail);
+  }, []);
+
+  const pushTrailSample = useCallback((x: number, y: number) => {
+    const state = trail.current;
+    const { samples } = state;
+    if (state.count > 0) {
+      const last = ((state.head - 1 + TRAIL_CAPACITY) % TRAIL_CAPACITY) * 3;
+      if (Math.hypot(x - samples[last], y - samples[last + 1]) < TRAIL_MIN_STEP) return;
+    }
+    const slot = state.head * 3;
+    samples[slot] = x;
+    samples[slot + 1] = y;
+    samples[slot + 2] = performance.now();
+    state.head = (state.head + 1) % TRAIL_CAPACITY;
+    state.count = Math.min(state.count + 1, TRAIL_CAPACITY);
+    if (state.frame === null) state.frame = requestAnimationFrame(drawTrail);
+  }, [drawTrail]);
+
   const moveLaser = useCallback((event: ReactPointerEvent<HTMLElement>) => {
     if (!laserEnabled || event.pointerType === 'touch') return;
     const bounds = event.currentTarget.getBoundingClientRect();
-    const x = Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100));
-    const y = Math.max(0, Math.min(100, ((event.clientY - bounds.top) / bounds.height) * 100));
+    const px = event.clientX - bounds.left;
+    const py = event.clientY - bounds.top;
+    const x = Math.max(0, Math.min(100, (px / bounds.width) * 100));
+    const y = Math.max(0, Math.min(100, (py / bounds.height) * 100));
     event.currentTarget.style.setProperty('--laser-x', `${x.toFixed(2)}%`);
     event.currentTarget.style.setProperty('--laser-y', `${y.toFixed(2)}%`);
     setLaserVisible(true);
-  }, [laserEnabled]);
+    if (trailEnabled) pushTrailSample(px, py);
+  }, [laserEnabled, pushTrailSample, trailEnabled]);
 
   const startTimer = useCallback(() => {
     timerAnchor.current = Date.now() - timerSeconds * 1000;
@@ -369,11 +507,110 @@ export function PresentationPage() {
     };
   }, []);
 
+  // While a slide moves, the chrome that sits over the stage drops its backdrop blur
+  // (motion-10) and the act wash is issued once per act turn (motion-4).
+  useEffect(() => {
+    setTransitioning(true);
+    const timer = window.setTimeout(() => setTransitioning(false), transitioningMs(motionProfile, transitionKind));
+    const railTimer = window.setTimeout(() => setRailIndex(index), slideExitMs(motionProfile, transitionKind));
+    if (isActTurn && motionProfile !== 'reduced') setWashTick((tick) => tick + 1);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(railTimer);
+    };
+    // Deliberately keyed on the index only: kind and act flag are set in the same batch.
+  }, [index]);
+
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  // Trail canvas: sized to the stage (device pixels, capped DPR) while the trail is
+  // enabled; resizing the bitmap also clears it. Off → cleared and idle.
+  useEffect(() => {
+    if (!trailEnabled) {
+      clearTrail();
+      return;
+    }
+    const canvas = trailCanvas.current;
+    const host = stage.current;
+    if (!canvas || !host) return;
+    const size = () => {
+      const bounds = host.getBoundingClientRect();
+      const dpr = Math.min(TRAIL_MAX_DPR, window.devicePixelRatio || 1);
+      canvas.width = Math.max(1, Math.round(bounds.width * dpr));
+      canvas.height = Math.max(1, Math.round(bounds.height * dpr));
+      canvas.getContext('2d')?.setTransform(dpr, 0, 0, dpr, 0, 0);
+      trail.current.head = 0;
+      trail.current.count = 0;
+    };
+    size();
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(size) : null;
+    observer?.observe(host);
+    if (!observer) window.addEventListener('resize', size);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', size);
+      clearTrail();
+    };
+  }, [clearTrail, trailEnabled]);
+
+  // The slide moves under the trail: a stroke must not outlive the thing it circled.
+  useEffect(() => {
+    clearTrail();
+  }, [clearTrail, index]);
+
+  // Chrome auto-hide in fullscreen (interaction-07): after a silence the header and
+  // footer slide out and the cursor hides; any key, pointer press or focus landing
+  // in the chrome brings them back. With the laser on, only the top/bottom bands
+  // wake the chrome so pointing at the slide does not keep it awake. The chrome is
+  // never aria-hidden while hidden: it stays in the tree and :focus-within reveals it.
+  useEffect(() => {
+    if (!isFullscreen || overlay) {
+      setChromeHidden(false);
+      return;
+    }
+    const host = shell.current;
+    if (!host) return;
+    let timer: number | null = null;
+    let frame: number | null = null;
+    let pointerY = 0;
+    const arm = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        timer = null;
+        setChromeHidden(true);
+      }, CHROME_HIDE_MS);
+    };
+    const wake = () => {
+      setChromeHidden(false);
+      arm();
+    };
+    const handlePointerMove = (event: PointerEvent) => {
+      pointerY = event.clientY;
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        const inBand = pointerY < CHROME_WAKE_BAND_PX || pointerY > window.innerHeight - CHROME_WAKE_BAND_PX;
+        if (!laserEnabled || inBand) wake();
+      });
+    };
+    host.addEventListener('pointermove', handlePointerMove, { passive: true });
+    host.addEventListener('pointerdown', wake, { passive: true });
+    host.addEventListener('focusin', wake);
+    window.addEventListener('keydown', wake, { passive: true });
+    arm();
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      host.removeEventListener('pointermove', handlePointerMove);
+      host.removeEventListener('pointerdown', wake);
+      host.removeEventListener('focusin', wake);
+      window.removeEventListener('keydown', wake);
+    };
+  }, [isFullscreen, laserEnabled, overlay]);
 
   useEffect(() => () => {
     if (copyStatusTimer.current !== null) window.clearTimeout(copyStatusTimer.current);
@@ -385,6 +622,8 @@ export function PresentationPage() {
         restoreFocus.current = document.activeElement;
       }
       const frame = window.requestAnimationFrame(() => {
+        // Keyboard users may already have tabbed into the panel during this frame; do not steal that focus.
+        if (overlayPanel.current?.contains(document.activeElement)) return;
         const firstFocusable = overlayPanel.current?.querySelector<HTMLElement>(
           'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
         );
@@ -436,13 +675,18 @@ export function PresentationPage() {
           );
           const first = focusable[0];
           const last = focusable.at(-1);
+          const active = document.activeElement;
           if (!first || !last) {
             event.preventDefault();
             overlayPanel.current.focus();
-          } else if (event.shiftKey && document.activeElement === first) {
+          } else if (!overlayPanel.current.contains(active)) {
+            // Focus is still outside the dialog (e.g. on the now-inert opener): wrap into it.
+            event.preventDefault();
+            (event.shiftKey ? last : first).focus();
+          } else if (event.shiftKey && active === first) {
             event.preventDefault();
             last.focus();
-          } else if (!event.shiftKey && document.activeElement === last) {
+          } else if (!event.shiftKey && active === last) {
             event.preventDefault();
             first.focus();
           }
@@ -494,60 +738,138 @@ export function PresentationPage() {
   }, [closeOverlay, goTo, laserEnabled, next, overlay, previous, toggleFullscreen, toggleLaser]);
 
   const progress = ((index + 1) / slides.length) * 100;
+  const tokens = MOTION[motionProfile];
+  const isReducedProfile = motionProfile === 'reduced';
+  const isActTurnKind = (kind: TransitionKind) => kind === 'act-forward' || kind === 'act-backward';
+  const dur = (ms: number) => (isReducedProfile ? 0.01 : sec(ms));
+
+  // The slide article orchestrates its parts (motion-2 / motion-4 / motion-9):
+  // within an act it steps sideways, an act turn rises and settles, a jump is a cut.
+  // Children stagger in reading order and release in reverse on exit.
   const variants = useMemo(
     () => ({
-      enter: ({ travel, transition, variant }: SlideMotionContext) => {
-        if (prefersReducedMotion) return { opacity: 0, x: 0, y: 0, scale: 1 };
+      enter: ({ travel, transition }: SlideMotionContext) => {
         const sign = travel > 0 ? 1 : -1;
-        if (usesCompactMotion) {
-          const crossesAct = transition === 'act-forward' || transition === 'act-backward';
-          return { opacity: 0, x: crossesAct ? 0 : sign * 20, y: crossesAct ? sign * 24 : 0, scale: 0.99 };
-        }
-        if (transition === 'act-forward' || transition === 'act-backward') {
-          return { opacity: 0, x: sign * 16, y: sign * 68, scale: 0.94, rotateX: sign * 3, filter: 'blur(12px)' };
-        }
-        if (transition === 'direct-jump') {
-          return { opacity: 0, x: sign * 28, y: 0, scale: 0.9, rotateY: sign * 2.5, filter: 'blur(16px)' };
-        }
-        if (variant === 'question' || variant === 'cover' || transition === 'opening') {
-          return { opacity: 0, x: 0, y: 30, scale: 0.965, filter: 'blur(8px)' };
-        }
-        return { opacity: 0, x: sign * 46, y: 0, scale: 0.985, filter: 'blur(5px)' };
+        if (isReducedProfile) return { opacity: 0, x: 0, y: 0, scale: 1 };
+        if (transition === 'opening') return { opacity: 1, x: 0, y: 0, scale: 1 };
+        if (isActTurnKind(transition)) return { opacity: 1, x: 0, y: sign * tokens.rise * 1.4, scale: 0.97 };
+        if (transition === 'direct-jump') return { opacity: 0, x: 0, y: 0, scale: 0.985 };
+        return { opacity: 1, x: sign * tokens.travel, y: 0, scale: 1 };
       },
-      center: prefersReducedMotion || usesCompactMotion
-        ? { opacity: 1, x: 0, y: 0, scale: 1 }
-        : { opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0, rotateY: 0, filter: 'blur(0px)' },
+      center: ({ transition }: SlideMotionContext) => ({
+        opacity: 1,
+        x: 0,
+        y: 0,
+        scale: 1,
+        transition: {
+          duration: sec(slideTransitionMs(motionProfile, transition)),
+          ease: isActTurnKind(transition) ? EASE.settle : EASE.out,
+          delayChildren: isReducedProfile ? 0 : transition === 'opening' ? 0.45 : isActTurnKind(transition) ? 0.08 : 0.02,
+          staggerChildren: sec(transition === 'direct-jump' ? Math.min(tokens.stagger, 40) : tokens.stagger),
+        },
+      }),
       exit: ({ travel, transition }: SlideMotionContext) => {
-        if (prefersReducedMotion) return { opacity: 0, x: 0, y: 0, scale: 1 };
         const sign = travel > 0 ? 1 : -1;
-        if (usesCompactMotion) {
-          const crossesAct = transition === 'act-forward' || transition === 'act-backward';
-          return { opacity: 0, x: crossesAct ? 0 : sign * -16, y: crossesAct ? sign * -20 : 0, scale: 0.995 };
-        }
-        if (transition === 'act-forward' || transition === 'act-backward') {
-          return { opacity: 0, x: sign * -12, y: sign * -54, scale: 1.035, rotateX: sign * -2, filter: 'blur(10px)' };
-        }
-        if (transition === 'direct-jump') {
-          return { opacity: 0, x: sign * -24, scale: 1.06, rotateY: sign * -2, filter: 'blur(14px)' };
-        }
-        return { opacity: 0, x: sign * -34, y: 0, scale: 0.99, filter: 'blur(4px)' };
+        const orchestration = {
+          duration: sec(slideExitMs(motionProfile, transition)),
+          ease: EASE.in,
+          staggerChildren: isReducedProfile || transition === 'direct-jump' ? 0 : 0.02,
+          staggerDirection: -1,
+        };
+        if (isReducedProfile) return { opacity: 0, x: 0, y: 0, scale: 1, transition: orchestration };
+        if (isActTurnKind(transition)) return { opacity: 0, x: 0, y: -sign * tokens.rise * 1.2, scale: 1.02, transition: orchestration };
+        if (transition === 'direct-jump') return { opacity: 0, x: 0, y: 0, scale: 1.012, transition: orchestration };
+        return { opacity: 0, x: -sign * tokens.travel * 0.7, y: 0, scale: 1, transition: orchestration };
       },
     }),
-    [prefersReducedMotion, usesCompactMotion],
+    [motionProfile], // tokens and dur derive from the profile
   );
+
+  // Slide parts share the article's variant keys so they inherit its orchestration.
+  // Question and cover titles are opacity-only: their words carry the motion (agent S).
+  const wordsCarryTitle = current.variant === 'question' || current.variant === 'cover';
+  const parts = useMemo(() => {
+    const rise = tokens.rise;
+    const titleRise = wordsCarryTitle ? 0 : rise;
+    return {
+      eyebrow: {
+        enter: { opacity: 0, y: rise * 0.3 },
+        center: { opacity: 1, y: 0, transition: { duration: dur(tokens.dS), ease: EASE.out } },
+        exit: { opacity: 0, y: 0, transition: { duration: dur(tokens.dXs), ease: EASE.in } },
+      },
+      title: {
+        enter: { opacity: 0, y: titleRise },
+        center: { opacity: 1, y: 0, transition: { duration: dur(tokens.dL), ease: EASE.settle } },
+        exit: { opacity: 0, y: -titleRise * 0.36, transition: { duration: dur(tokens.dS * 0.6), ease: EASE.in } },
+      },
+      subtitle: {
+        enter: { opacity: 0, y: rise * 0.45 },
+        center: { opacity: 1, y: 0, transition: { duration: dur(tokens.dM), ease: EASE.out } },
+        exit: { opacity: 0, y: -rise * 0.3, transition: { duration: dur(tokens.dS * 0.6), ease: EASE.in } },
+      },
+      visual: {
+        enter: { opacity: 0, y: rise * 0.5, scale: isReducedProfile ? 1 : 0.985 },
+        center: { opacity: 1, y: 0, scale: 1, transition: { duration: dur(tokens.dM), ease: EASE.out } },
+        exit: { opacity: 0, y: 0, scale: isReducedProfile ? 1 : 0.985, transition: { duration: dur(tokens.dS * 0.6), ease: EASE.in } },
+      },
+      body: {
+        enter: { opacity: 0, y: rise * 0.5 },
+        center: { opacity: 1, y: 0, transition: { duration: dur(tokens.dM), ease: EASE.out } },
+        exit: { opacity: 0, y: -rise * 0.2, transition: { duration: dur(tokens.dS * 0.6), ease: EASE.in } },
+      },
+    };
+  }, [motionProfile, wordsCarryTitle]); // tokens and dur derive from the profile
+
+  // The gutter numeral rises on act turns (and once on the opening); it never moves within an act.
+  const folioVariants = useMemo(
+    () => ({
+      enter: ({ travel, transition }: SlideMotionContext) => ({
+        opacity: 0,
+        y: transition === 'opening' ? tokens.rise * 1.2 : (travel > 0 ? 1 : -1) * tokens.rise * 1.2,
+      }),
+      center: ({ transition }: SlideMotionContext) => ({
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: dur(tokens.dL),
+          ease: EASE.settle,
+          delay: isReducedProfile ? 0 : transition === 'opening' ? 0.25 : 0.42,
+        },
+      }),
+      exit: ({ travel }: SlideMotionContext) => ({
+        opacity: 0,
+        y: -(travel > 0 ? 1 : -1) * tokens.rise * 0.8,
+        transition: { duration: dur(tokens.dS), ease: EASE.in },
+      }),
+    }),
+    [motionProfile], // tokens and dur derive from the profile
+  );
+
+  // Serif folio counter: the number rolls like an odometer in the travel direction.
+  const counterVariants = useMemo(
+    () => ({
+      enter: (travel: number) => ({ y: isReducedProfile ? 0 : travel > 0 ? '100%' : '-100%', opacity: 0 }),
+      center: { y: 0, opacity: 1, transition: { duration: dur(tokens.dS), ease: EASE.out } },
+      exit: (travel: number) => ({
+        y: isReducedProfile ? 0 : travel > 0 ? '-100%' : '100%',
+        opacity: 0,
+        transition: { duration: dur(tokens.dS), ease: EASE.in },
+      }),
+    }),
+    [motionProfile], // tokens and dur derive from the profile
+  );
+
   const motionContext: SlideMotionContext = {
     travel: direction,
     transition: transitionKind,
     variant: current.variant ?? 'split',
   };
-  const slideTransitionDuration = prefersReducedMotion
-    ? 0.01
-    : usesCompactMotion
-      ? transitionKind.startsWith('act-') ? 0.35 : 0.28
-      : transitionKind.startsWith('act-') ? 0.58 : transitionKind === 'direct-jump' ? 0.5 : 0.42;
+  const slideTransitionDurationMs = slideTransitionMs(motionProfile, transitionKind);
+  const railSlide = slides[Math.min(railIndex, slides.length - 1)];
 
   return (
     <main
+      ref={shell}
       id="main-content"
       className="deck-shell"
       aria-label="Presentación: La arquitectura de lo ausente"
@@ -556,11 +878,17 @@ export function PresentationPage() {
       data-deck-transition={transitionKind}
       data-deck-variant={current.variant ?? 'split'}
       data-motion-profile={motionProfile}
-      data-slide-transition-ms={Math.round(slideTransitionDuration * 1000)}
+      data-motion-budget={motionBudget.mode}
+      data-slide-transition-ms={slideTransitionDurationMs}
+      data-deck-travel={direction > 0 ? 'forward' : 'backward'}
+      data-deck-transitioning={transitioning ? 'true' : 'false'}
+      data-deck-complete={deckComplete ? 'true' : 'false'}
       data-laser-enabled={laserEnabled ? 'true' : 'false'}
+      data-chrome-hidden={chromeHidden ? 'true' : 'false'}
       style={{
         '--deck-progress': `${progress}%`,
         '--act-progress': actProgress,
+        ...motionVars(motionProfile),
       } as CSSProperties}
       onPointerDown={(event) => {
         if (event.pointerType !== 'touch') return;
@@ -588,6 +916,14 @@ export function PresentationPage() {
         <div className="deck-orbit orbit-direct" />
         <div className="deck-orbit orbit-reference" />
         <div className="deck-grid" />
+        {washTick > 0 && (
+          <div
+            key={washTick}
+            className="deck-act-wash"
+            data-direction={direction > 0 ? 'forward' : 'backward'}
+            onAnimationEnd={() => setWashTick(0)}
+          />
+        )}
       </div>
 
       <header className="deck-header" inert={Boolean(overlay)} aria-hidden={overlay ? true : undefined}>
@@ -621,6 +957,15 @@ export function PresentationPage() {
           >
             {isFullscreen ? 'Salir' : 'Pantalla'} <kbd>F</kbd>
           </button>
+          <button
+            type="button"
+            className="deck-help"
+            onClick={() => openOverlay('help')}
+            aria-label="Mostrar ayuda de navegación"
+            aria-keyshortcuts="?"
+          >
+            Ayuda <kbd>?</kbd>
+          </button>
         </div>
       </header>
 
@@ -636,6 +981,7 @@ export function PresentationPage() {
         data-slide-id={current.id}
         data-act={currentSection.id}
         data-act-index={currentSectionIndex + 1}
+        data-act-numeral={actNumeral}
         data-slide-variant={current.variant ?? 'split'}
         data-transition={transitionKind}
         data-motion-profile={motionProfile}
@@ -646,6 +992,23 @@ export function PresentationPage() {
         onPointerMove={moveLaser}
         onPointerLeave={() => setLaserVisible(false)}
       >
+        <canvas ref={trailCanvas} className="deck-laser-trail" aria-hidden="true" />
+        <div className="deck-act-folio" aria-hidden="true">
+          <AnimatePresence custom={motionContext}>
+            <motion.div
+              key={currentSection.id}
+              className="deck-act-mark"
+              custom={motionContext}
+              variants={folioVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+            >
+              <b className="deck-act-numeral">{actNumeral}</b>
+              <span className="deck-act-name">{currentSection.label}</span>
+            </motion.div>
+          </AnimatePresence>
+        </div>
         <span className="deck-laser" aria-hidden="true">
           <i className="deck-laser-core" />
           <i className="deck-laser-aura" />
@@ -656,20 +1019,25 @@ export function PresentationPage() {
             className={`deck-slide ${current.variant === 'visual' ? 'slide-variant-visual' : `slide-${current.variant ?? 'split'}`}`}
             custom={motionContext}
             variants={variants}
-            layout={!prefersReducedMotion}
+            data-foot={bodyArea === 'foot' ? 'true' : undefined}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: prefersReducedMotion ? 0.01 : slideTransitionDuration, ease: [0.22, 1, 0.36, 1] }}
           >
-            {current.eyebrow && <p className="slide-eyebrow">{current.eyebrow}</p>}
-            <h1 id={slideTitleId}>{current.title}</h1>
-            {current.subtitle && <div className="slide-subtitle">{current.subtitle}</div>}
-            <AnimatePresence initial={false}>
+            <header className="slide-head">
+              {current.eyebrow && <motion.p className="slide-eyebrow" variants={parts.eyebrow}>{current.eyebrow}</motion.p>}
+              <motion.h1 id={slideTitleId} variants={parts.title}>{current.title}</motion.h1>
+              {current.subtitle && <motion.div className="slide-subtitle" variants={parts.subtitle}>{current.subtitle}</motion.div>}
+            </header>
+            <AnimatePresence>
               {current.visual && activeVisualStage && visualRevealStep !== null && revealStep >= visualRevealStep && (
                 <motion.div
                   key={`${current.id}-visual`}
+                  ref={setVisualElement}
                   className="slide-visual"
+                  data-slide={current.id}
+                  variants={parts.visual}
+                  exit={parts.visual.exit}
                   tabIndex={0}
                   role="region"
                   data-deck-swipe="ignore"
@@ -679,10 +1047,6 @@ export function PresentationPage() {
                   data-semantic-state={activeVisualStage.key}
                   aria-label={`Diagrama de «${currentLabel}». Etapa ${activeVisualStageIndex === null ? 1 : activeVisualStageIndex + 1} de ${visualStages.length}: ${activeVisualStage.label}`}
                   aria-describedby={`${visualHintId} ${visualStageStatusId}`}
-                  initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: prefersReducedMotion ? 0 : 10 }}
-                  transition={{ duration: prefersReducedMotion ? 0.01 : usesCompactMotion ? 0.24 : 0.32 }}
                 >
                   <span id={visualHintId} className="slide-visual-hint">
                     <span aria-hidden="true">↔</span> Desliza para explorar el diagrama
@@ -696,9 +1060,25 @@ export function PresentationPage() {
                   >
                     Etapa visual {activeVisualStageIndex === null ? 1 : activeVisualStageIndex + 1} de {visualStages.length}: {activeVisualStage.label}.
                   </span>
-                  <div className="visual-stage-cue" data-state={activeVisualStage.key} aria-hidden="true">
-                    <span>{String((activeVisualStageIndex ?? 0) + 1).padStart(2, '0')} / {String(visualStages.length).padStart(2, '0')}</span>
-                    <strong>{activeVisualStage.label}</strong>
+                  <div
+                    key={activeVisualStage.key}
+                    className="visual-stage-cue"
+                    data-state={activeVisualStage.key}
+                    aria-hidden="true"
+                    style={{ '--stage-fill': ((activeVisualStageIndex ?? 0) + 1) / visualStages.length } as CSSProperties}
+                  >
+                    <i className="visual-stage-ruler">
+                      {visualStages.map((stageSpec, stageIndex) => (
+                        <b
+                          key={stageSpec.key}
+                          data-state={stageIndex < (activeVisualStageIndex ?? 0) ? 'complete' : stageIndex === (activeVisualStageIndex ?? 0) ? 'current' : 'upcoming'}
+                        />
+                      ))}
+                    </i>
+                    <span className="visual-stage-cue-index">
+                      <b>{String((activeVisualStageIndex ?? 0) + 1).padStart(2, '0')}</b> / {String(visualStages.length).padStart(2, '0')}
+                    </span>
+                    <strong className="visual-stage-cue-label"><i>{activeVisualStage.label}</i></strong>
                   </div>
                   {current.visual}
                 </motion.div>
@@ -707,10 +1087,9 @@ export function PresentationPage() {
                 <motion.div
                   key={`${current.id}-body`}
                   className="slide-body"
-                  initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: prefersReducedMotion ? 0 : 8 }}
-                  transition={{ duration: prefersReducedMotion ? 0.01 : usesCompactMotion ? 0.22 : 0.28 }}
+                  data-area={bodyArea}
+                  variants={parts.body}
+                  exit={parts.body.exit}
                 >
                   {current.body}
                 </motion.div>
@@ -720,11 +1099,12 @@ export function PresentationPage() {
         </AnimatePresence>
         <figure
           className="deck-source-rail"
-          data-source-page={current.citation.page}
-          aria-label={`Cita textual de Bertrand Russell, capítulo 5, página ${current.citation.page}`}
+          data-source-page={railSlide.citation.page}
+          data-state={railIndex === index ? 'settled' : 'leaving'}
+          aria-label={`Cita textual de Bertrand Russell, capítulo 5, página ${railSlide.citation.page}`}
         >
-          <blockquote>{current.citation.quote}</blockquote>
-          <figcaption>Russell · cap. 5 · p. {current.citation.page}</figcaption>
+          <blockquote key={`${railSlide.id}-quote`}>{railSlide.citation.quote}</blockquote>
+          <figcaption key={`${railSlide.id}-caption`}>Russell · cap. 5 · p. {railSlide.citation.page}</figcaption>
         </figure>
       </section>
 
@@ -734,7 +1114,12 @@ export function PresentationPage() {
       </div>
       <span className="sr-only" role="status" aria-live="polite">{laserAnnouncement}</span>
 
-      <footer className="deck-footer" inert={Boolean(overlay)} aria-hidden={overlay ? true : undefined}>
+      <footer
+        className="deck-footer"
+        inert={Boolean(overlay)}
+        aria-hidden={overlay ? true : undefined}
+        data-reveal-complete={revealComplete ? 'true' : 'false'}
+      >
         <button
           type="button"
           className="deck-arrow"
@@ -786,13 +1171,39 @@ export function PresentationPage() {
             aria-valuenow={index + 1}
             aria-valuetext={`Diapositiva ${index + 1} de ${slides.length}; ${currentSection.label}${revealCount > 0 ? `; paso ${revealStep + 1} de ${revealCount + 1}` : ''}`}
           >
-            <i aria-hidden="true" style={{ width: `${progress}%` }} />
+            {sections.map((section) => {
+              const state = index > section.end ? 'done' : index >= section.start ? 'current' : 'todo';
+              const fill = state === 'done' ? 1 : state === 'current' ? (index + 1 - section.start) / (section.end - section.start + 1) : 0;
+              return (
+                <i
+                  key={section.id}
+                  aria-hidden="true"
+                  data-segment={section.id}
+                  data-state={state}
+                  style={{ '--fill': fill } as CSSProperties}
+                />
+              );
+            })}
           </div>
-          <span title={`${currentSection.label} · ${currentLabel}`}>
-            <small className="deck-current-section">
-              {currentSection.label}{revealCount > 0 ? ` · ${revealStep + 1}/${revealCount + 1}` : ''}
-            </small>{' '}
-            <b>{String(index + 1).padStart(2, '0')}</b> / {String(slides.length).padStart(2, '0')}
+          <span className="deck-folio" title={`${currentSection.label} · ${currentLabel}`}>
+            <small className="deck-current-section">{currentSection.label}</small>
+            <span className="deck-folio-count">
+              <span className="deck-counter">
+                <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+                  <motion.b
+                    key={index}
+                    custom={direction}
+                    variants={counterVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                  >
+                    {String(index + 1).padStart(2, '0')}
+                  </motion.b>
+                </AnimatePresence>
+              </span>
+              {' '}/ {String(slides.length).padStart(2, '0')}
+            </span>
           </span>
         </div>
         <button
@@ -852,14 +1263,16 @@ export function PresentationPage() {
                     Selecciona cualquier etapa para continuar desde allí.
                   </p>
                   <nav className="overview-sections" aria-label="Actos de la exposición">
-                    {sections.map((section) => (
+                    {sections.map((section, sectionIndex) => (
                       <button
                         key={section.label}
                         type="button"
                         className={section.label === currentSection.label ? 'is-active' : ''}
+                        data-act={section.id}
                         aria-current={section.label === currentSection.label ? 'location' : undefined}
                         onClick={() => goTo(section.start, { focusSlide: true })}
                       >
+                        <b aria-hidden="true">{actNumerals[sectionIndex]}</b>
                         <span>{section.label}</span>
                         <small>{section.end - section.start + 1} diapositivas</small>
                       </button>
@@ -874,6 +1287,7 @@ export function PresentationPage() {
                           key={slide.id}
                           type="button"
                           className={slideIndex === index ? 'is-active' : ''}
+                          data-act={slideSection.id}
                           aria-current={slideIndex === index ? 'step' : undefined}
                           aria-label={`Ir a la diapositiva ${slideIndex + 1}: ${slideLabel}`}
                           onClick={() => goTo(slideIndex, { focusSlide: true })}
@@ -1004,25 +1418,13 @@ export function PresentationPage() {
                   <div><dt><kbd>F</kbd></dt><dd>Pantalla completa</dd></div>
                   <div><dt><kbd>Home</kbd> <kbd>End</kbd></dt><dd>Inicio / final</dd></div>
                   <div><dt><kbd>Esc</kbd></dt><dd>Cerrar panel</dd></div>
-                  <div><dt>Deslizar</dt><dd>Navegar en móvil</dd></div>
+                  <div><dt><kbd>Deslizar</kbd></dt><dd>Navegar en móvil</dd></div>
                 </dl>
               )}
             </motion.section>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <button
-        type="button"
-        className="deck-help"
-        inert={Boolean(overlay)}
-        aria-hidden={overlay ? true : undefined}
-        onClick={() => openOverlay('help')}
-        aria-label="Mostrar ayuda de navegación"
-        aria-keyshortcuts="?"
-      >
-        ?
-      </button>
     </main>
   );
 }

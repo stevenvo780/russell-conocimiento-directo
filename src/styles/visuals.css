@@ -1,0 +1,536 @@
+/*
+  SVG visual system.
+
+  Vocabulary (brief §1): hue = epistemic status (amber presentado · paper verdad
+  puente · teal referido · rose fallo); stroke style = certainty (solid firm,
+  dashed 7 7 probable); opacity = sequence only (future 0 · past 0.62 on the
+  node's children · active 1). Stroke weights: hairline 1 (rules, context
+  boxes), edges 2, axes/spines 3. Type: Cormorant for thing-words and
+  sentences, mono only for relation / zone labels, kickers and stage markers.
+
+  Motion tokens (--m-*) exist only inside .deck-shell; every use carries a
+  fallback so the home page renders the same drawings without them.
+*/
+
+.concept-visual {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Type */
+
+.concept-visual text {
+  fill: var(--paper);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  text-anchor: middle;
+}
+
+.concept-visual text[text-anchor='start'] {
+  text-anchor: start;
+}
+
+.concept-visual text[text-anchor='end'] {
+  text-anchor: end;
+}
+
+.concept-visual .node-caption {
+  fill: var(--muted);
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.concept-visual .edge-label,
+.concept-visual .zone-label,
+.concept-visual .distance-pole,
+.concept-visual .uncertain-label,
+.concept-visual .visual-kicker,
+.concept-visual .node-formula,
+.concept-visual .trace-readout,
+.concept-visual .stage-marker text {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.concept-visual .visual-kicker {
+  fill: var(--paper);
+  letter-spacing: 0.14em;
+}
+
+.concept-visual .node-formula {
+  fill: var(--paper);
+  letter-spacing: 0.02em;
+}
+
+.concept-visual .reach-conclusion,
+.concept-visual .winner-text {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.concept-visual .core-title {
+  fill: var(--direct-bright);
+  font-size: 24px;
+}
+
+.concept-visual .core-note {
+  fill: var(--muted);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.concept-visual .candidate-letter {
+  fill: var(--direct-bright);
+  font-size: 19px;
+}
+
+.direct-label {
+  fill: var(--direct-bright) !important;
+}
+
+.reference-label {
+  fill: var(--reference-bright) !important;
+}
+
+.fail-label {
+  fill: var(--danger) !important;
+}
+
+.winner-text {
+  fill: var(--reference-bright);
+}
+
+/* Nodes and edges: transitions are opacity / stroke only (never filter) */
+
+.semantic-diagram .semantic-node,
+.semantic-diagram .semantic-detail,
+.semantic-diagram .semantic-edge,
+.semantic-diagram .node-surface,
+.semantic-diagram .node-detail {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity var(--m-d-s, 220ms) var(--m-ease-out, ease), stroke-width var(--m-d-s, 220ms) ease;
+}
+
+.semantic-diagram .semantic-node[data-node] {
+  cursor: crosshair;
+  pointer-events: bounding-box;
+}
+
+/* Node forms by status */
+
+.semantic-diagram .node-surface {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.direct-node .node-surface,
+.direct-step .node-surface,
+.direct-pole .node-surface,
+.orbit-item .node-surface,
+.person-symbol .node-surface,
+.orbit-core {
+  fill: var(--direct-soft);
+  stroke: var(--direct);
+  stroke-width: 1.5;
+}
+
+.reference-node .node-surface,
+.reference-step .node-surface,
+.reference-pole .node-surface {
+  fill: none;
+  stroke: var(--reference);
+  stroke-width: 1.5;
+}
+
+.truth-node .node-surface,
+.bridge-step .node-surface,
+.reach-center .node-surface,
+.gate-diamond .node-surface {
+  fill: var(--surface-2);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.concept-visual .node-rule {
+  fill: none;
+  stroke: var(--paper);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+}
+
+.fail-node .node-surface {
+  fill: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  stroke: var(--danger);
+  stroke-width: 1.5;
+  stroke-dasharray: 7 7;
+}
+
+.uncertain-node .node-surface,
+.uncertain-item .node-surface,
+.limit-node .node-surface,
+.semantic-node[data-state='probable'] .node-surface,
+.semantic-node[data-state='unresolved'] .node-surface {
+  stroke-dasharray: 7 7;
+}
+
+.uncertain-node .node-surface,
+.uncertain-item .node-surface,
+.limit-node .node-surface {
+  fill: var(--surface);
+  stroke: var(--direct);
+  stroke-width: 1.5;
+}
+
+.conclusion-node .node-surface {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.person-symbol .node-detail {
+  fill: none;
+  stroke: var(--direct);
+  stroke-width: 2;
+}
+
+.person-symbol .node-index {
+  stroke: var(--direct);
+  stroke-width: 1.5;
+}
+
+.concept-visual .stage-marker circle {
+  fill: var(--surface);
+  stroke: var(--act-accent, var(--line-strong));
+  stroke-opacity: 0.7;
+  stroke-width: 1;
+}
+
+.concept-visual .stage-marker text {
+  fill: var(--act-accent, var(--paper));
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+}
+
+/* Edges */
+
+.line-neutral,
+.line-direct,
+.line-reference,
+.line-uncertain,
+.line-fail,
+.distance-stop line {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+
+.line-direct {
+  stroke: var(--direct);
+}
+
+.line-reference {
+  stroke: var(--reference);
+}
+
+.line-uncertain {
+  stroke: var(--direct);
+}
+
+.line-fail {
+  stroke: var(--danger);
+}
+
+.dashed {
+  stroke-dasharray: 7 7;
+}
+
+.acquaintance-edge {
+  stroke-opacity: 0.6;
+}
+
+.knowledge-tree .line-reference {
+  stroke-width: 1.5;
+}
+
+.certainty-axis,
+.distance-spine,
+.expansion-edge,
+.continuum-axis {
+  fill: none;
+  stroke-width: 3;
+}
+
+.radial-edge {
+  stroke-opacity: 0.24;
+}
+
+/* Flow pulse twin (motion-6): a short bright segment travels once every 2.4 s
+   along the edges of the active stage. Spatial profile only; paused by the
+   motion budget; never on dashed edges (they are not drawn, they fade). */
+
+.edge-pulse {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0.14 1;
+  stroke-dashoffset: 1.14;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.edge-pulse.tone-direct {
+  stroke: var(--direct-bright);
+}
+
+.edge-pulse.tone-reference {
+  stroke: var(--reference-bright);
+}
+
+.edge-pulse.tone-fail {
+  stroke: var(--danger);
+}
+
+.deck-shell[data-motion-profile='spatial'] .slide-visual[data-arrival='scripted'] .edge-group[data-stage-role='active'] .edge-pulse {
+  animation: edge-pulse 2.4s var(--m-ease-inout, ease-in-out) calc(var(--m-d-xl, 900ms) + var(--m-d-m, 420ms)) infinite;
+}
+
+@keyframes edge-pulse {
+  0% { stroke-dashoffset: 1.14; opacity: 0; }
+  12% { opacity: 0.9; }
+  88% { opacity: 0.9; }
+  100% { stroke-dashoffset: -0.14; opacity: 0; }
+}
+
+/* Stage roles (useStageArrival). The dim is applied to the node's children
+   because framer leaves an inline opacity on the group. */
+
+.slide-visual[data-arrival='scripted'] .semantic-node[data-stage-role='active'],
+.slide-visual[data-arrival='scripted'] .semantic-detail[data-stage-role='active'],
+.slide-visual[data-arrival='scripted'] .edge-group[data-stage-role='active'] {
+  transition: none;
+}
+
+.slide-visual[data-arrival='scripted'] .semantic-node[data-stage-role='future'],
+.slide-visual[data-arrival='scripted'] .edge-group[data-stage-role='future'] {
+  transition: opacity var(--m-d-s) var(--m-ease-in);
+}
+
+/* The root (stage 0) is the anchor of the walk, never "past": only visited stages dim. */
+.slide-visual[data-arrival='scripted'] .semantic-node[data-stage-role='past'] > :is(.node-surface, .node-detail, .node-index, .node-core, .node-tick, .node-glyph, .node-rule, .stage-marker, text, .semantic-edge, .orbit-item) {
+  opacity: 0.62;
+  transition: opacity var(--m-d-m) var(--m-ease-out);
+}
+
+.slide-visual[data-arrival='scripted'] .edge-group[data-stage-role='past'] {
+  opacity: 0.55;
+}
+
+/* Ambient cues. On the home page (self arrival) the whole drawing speaks;
+   in the deck only the active stage does, so at rest ≤ 4 loops run. */
+
+.semantic-diagram[data-motion='semantic'][data-arrival='self'] .semantic-edge.dashed {
+  animation: semantic-current 5.5s linear infinite;
+}
+
+.semantic-diagram[data-motion='semantic'][data-arrival='self'] [data-state='presented'] .node-detail,
+.semantic-diagram[data-motion='semantic'][data-arrival='scripted'] .semantic-node[data-stage-role='active'][data-state='presented'] .node-detail {
+  animation: semantic-breathe 4.6s ease-in-out infinite;
+}
+
+.semantic-diagram[data-motion='semantic'][data-arrival='self'] :is([data-state='unresolved'], [data-state='probable']) .node-surface,
+.semantic-diagram[data-motion='semantic'][data-arrival='scripted'] .semantic-node[data-stage-role='active']:is([data-state='unresolved'], [data-state='probable']) .node-surface {
+  animation: uncertainty-signal 3.1s ease-in-out infinite;
+}
+
+/* Budget gate (brief §0): every loop above must yield to the shell's budget, whatever
+   the specificity of the rule that started it. */
+.deck-shell[data-motion-budget='static'] .semantic-diagram *,
+.deck-shell[data-motion-budget='off'] .semantic-diagram * {
+  animation-play-state: paused !important;
+}
+
+@keyframes semantic-current {
+  to { stroke-dashoffset: -56; }
+}
+
+@keyframes semantic-breathe {
+  0%, 100% { opacity: 0.52; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.025); }
+}
+
+@keyframes uncertainty-signal {
+  0%, 100% { stroke-opacity: 0.48; }
+  50% { stroke-opacity: 1; }
+}
+
+/* Relationship tracing (interaction-03): hover / tap a node to light the
+   relations that start or end at it; everything else recedes. The readout is
+   a mono line inside the drawing, aria-hidden. */
+
+/* The dim goes on the node's children so the group's own opacity (framer inline,
+   arrival animation) keeps control of the arrival itself. */
+.semantic-diagram[data-tracing='true'] .semantic-node:not([data-trace], [data-stage-role='future']) > :is(.node-surface, .node-detail, .node-index, .node-core, .node-tick, .node-glyph, .node-rule, .stage-marker, text, .semantic-edge, .orbit-item),
+.semantic-diagram[data-tracing='true'] .semantic-detail:not([data-trace], [data-stage-role='future']) > * {
+  opacity: 0.28;
+}
+
+.semantic-diagram[data-tracing='true'] .semantic-edge:not([data-trace]) {
+  opacity: 0.22;
+}
+
+/* On the home page framer leaves inline opacity on the edges: the dim must outrank it. */
+.semantic-diagram[data-arrival='self'][data-tracing='true'] .semantic-edge:not([data-trace]) {
+  opacity: 0.22 !important;
+}
+
+.semantic-diagram[data-tracing='true'] .semantic-node[data-trace] > :is(.node-surface, .node-detail, .node-index, .node-core, .node-tick, .node-glyph, .node-rule, .stage-marker, text, .semantic-edge, .orbit-item) {
+  opacity: 1;
+}
+
+.semantic-diagram .semantic-edge[data-trace='edge'] {
+  stroke-width: 3;
+  stroke-opacity: 1;
+}
+
+.semantic-diagram .edge-group[data-trace='edge'] .edge-pulse {
+  animation: none;
+  stroke-dasharray: none;
+  stroke-width: 9;
+  opacity: 0.2;
+}
+
+.semantic-diagram .semantic-node[data-trace='source'] .node-surface {
+  stroke-width: 2.5;
+}
+
+.semantic-diagram .semantic-node[data-pinned='true'] .node-surface {
+  stroke-width: 3;
+}
+
+.concept-visual .trace-readout {
+  fill: var(--act-accent, var(--paper));
+  opacity: 1;
+  transition: opacity var(--m-d-s, 220ms) var(--m-ease-out, ease);
+}
+
+.concept-visual .trace-readout[data-empty='true'] {
+  opacity: 0;
+}
+
+/* Constellation */
+
+.orbit-ring {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 4 9;
+}
+
+.orbit-core {
+  stroke-width: 2;
+}
+
+.uncertain-item .node-surface {
+  fill: var(--surface);
+}
+
+/* Subject */
+
+.subject-node text:not(.node-caption, .edge-label, .uncertain-label, .stage-marker text) {
+  font-size: 21px;
+}
+
+.subject-relation .uncertain-label {
+  fill: var(--direct-bright);
+}
+
+/* Gate */
+
+.gate-diamond text:not(.node-formula, .stage-marker text) {
+  font-size: 18px;
+}
+
+/* Distance */
+
+.distance-stop circle {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+
+.distance-stop.near-stop circle {
+  stroke: var(--direct);
+}
+
+.distance-stop.middle-stop circle {
+  stroke: color-mix(in srgb, var(--direct) 50%, var(--reference));
+}
+
+.distance-stop.far-stop circle {
+  stroke: var(--reference);
+}
+
+.distance-stop .stage-marker circle {
+  stroke: var(--act-accent, var(--line-strong));
+  stroke-width: 1;
+}
+
+/* Anchor reach */
+
+.reach-pole circle,
+.reach-center circle {
+  stroke-width: 2;
+}
+
+.reach-pole .node-surface,
+.reach-center .node-surface {
+  stroke-width: 1.5;
+}
+
+.reach-center .node-surface {
+  stroke-width: 1;
+}
+
+.anchor-reach .world-fragment {
+  transition: opacity var(--m-d-m, 420ms) var(--m-ease-out, ease) calc(var(--i, 0) * var(--m-stagger, 70ms));
+}
+
+/* Epistemic field (ambient network) */
+
+.epistemic-field {
+  position: absolute;
+  z-index: -3;
+  inset: 0;
+  opacity: 0.72;
+}
+
+.epistemic-field svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media print {
+  .edge-pulse,
+  .trace-readout {
+    display: none !important;
+  }
+}

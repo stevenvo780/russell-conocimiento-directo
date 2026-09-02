@@ -174,7 +174,6 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
   return (
     <main id="main-content" className="site-shell" ref={shellRef} data-scroll-band="presence" data-pointer-ready="false">
       <div className="page-progress" role="progressbar" aria-label="Progreso de lectura" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0} aria-valuetext="Presencia"><i /></div>
-      <div className="epistemic-cursor" aria-hidden="true"><i /><span /></div>
       <header className="site-header">
         <div className="site-identity">
           <a className="site-brand" href="https://paideia.stevenvallejo.com/" aria-label="Volver a Paideía">
@@ -269,12 +268,12 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
       </section>
 
       <section id="tesis" className="thesis-section content-frame" data-reveal-section>
-        <div className="section-number" data-reveal-item>01</div>
-        <div className="section-heading" data-reveal-item>
+        <div className="section-number">01</div>
+        <div className="section-heading">
           <p className="section-kicker">La tesis en una frase</p>
           <h2>Lo directo nos ancla.<br />La referencia nos lleva más lejos.</h2>
         </div>
-        <div className="thesis-copy" data-reveal-item>
+        <div className="thesis-copy">
           <p>
             Nuestra experiencia inmediata es estrecha: un color, una resistencia, un recuerdo. Russell convierte esa limitación en una arquitectura: lo presente aporta los materiales; las descripciones construyen el alcance.
           </p>
@@ -286,7 +285,7 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
       </section>
 
       <section className="cases-section content-frame" aria-labelledby="cases-title" data-reveal-section>
-        <header className="cases-heading" data-reveal-item>
+        <header className="cases-heading">
           <p className="section-kicker">Tres pruebas de distancia</p>
           <h2 id="cases-title">El objeto se aleja.<br />El conocimiento no desaparece.</h2>
           <p>Cada caso conserva un anclaje, pero exige una operación más compleja para alcanzar aquello de lo que hablamos.</p>
@@ -325,7 +324,6 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
               key={item.number}
               className={`case-card case-${item.tone}`}
               data-number={item.number}
-              data-reveal-item
               data-pointer-active="false"
               onPointerMove={tiltCase}
               onPointerLeave={resetCase}
@@ -344,7 +342,7 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
 
       <section className="comparison-section" data-reveal-section>
         <div className="content-frame comparison-frame">
-          <div className="comparison-tabs" role="tablist" aria-label="Comparar formas de conocimiento" data-reveal-item>
+          <div className="comparison-tabs" role="tablist" aria-label="Comparar formas de conocimiento">
             <button
               type="button"
               role="tab"
@@ -386,7 +384,6 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
             key={activeMode}
             id="comparison-panel"
             className={`comparison-card mode-${activeMode}`}
-            data-reveal-item
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
@@ -412,20 +409,20 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
       </section>
 
       <section id="recorrido" className="map-section content-frame" data-reveal-section>
-        <div className="section-number" data-reveal-item>02</div>
-        <div className="section-heading map-heading" data-reveal-item>
+        <div className="section-number">02</div>
+        <div className="section-heading map-heading">
           <p className="section-kicker">La arquitectura</p>
           <h2>Un mapa antes de entrar en los casos</h2>
           <p>El capítulo separa dos preguntas: qué cosas conocemos y mediante qué relación las conocemos.</p>
         </div>
-        <div className="map-visual" tabIndex={0} role="region" aria-label="Diagrama: taxonomía del conocimiento" data-reveal-item>
+        <div className="map-visual" tabIndex={0} role="region" aria-label="Diagrama: taxonomía del conocimiento">
           <KnowledgeTree compact />
         </div>
       </section>
 
       <section className="table-story-section" data-reveal-section>
         <div className="content-frame table-story-frame">
-          <div className="table-story-copy" data-reveal-item>
+          <div className="table-story-copy">
             <p className="section-kicker">El experimento mental central</p>
             <h2>La mesa se divide en apariencia y explicación</h2>
             <p>
@@ -474,7 +471,6 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
             tabIndex={0}
             role="tabpanel"
             aria-labelledby={`lab-tab-${labStage}`}
-            data-reveal-item
           >
             <div className="lab-readout" aria-live="polite">
               <span>{LAB_STAGES.find((stage) => stage.id === labStage)?.label}</span>
@@ -489,11 +485,11 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
 
       <section className="questions-section" data-reveal-section>
         <div className="content-frame questions-frame">
-          <div data-reveal-item>
+          <div>
             <p className="section-kicker">Zonas de tensión</p>
             <h2>Russell abre problemas que su capítulo no cierra</h2>
           </div>
-          <div className="question-grid" data-reveal-item>
+          <div className="question-grid">
             <article><span>01</span><h3>Memoria</h3><p>¿Qué se presenta cuando el recuerdo es falso?</p></article>
             <article><span>02</span><h3>Yo</h3><p>¿Conocemos al sujeto o solo sus estados?</p></article>
             <article><span>03</span><h3>Universales</h3><p>¿Son objetos, conceptos o usos de palabras?</p></article>
@@ -504,7 +500,7 @@ export function HomePage({ theme, onTheme }: { theme: Theme; onTheme: () => void
 
       <section id="cierre" className="closing-section" data-reveal-section>
         <EpistemicField />
-        <div className="content-frame closing-frame" data-reveal-item>
+        <div className="content-frame closing-frame">
           <p className="section-kicker">Síntesis final</p>
           <h2>Una experiencia pequeña.<br />Un mundo inmenso.</h2>
           <p>

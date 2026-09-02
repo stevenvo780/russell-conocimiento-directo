@@ -1,0 +1,2432 @@
+/* Deck */
+
+/*
+  Type scale for the deck. Display sizes come from these tokens per slide
+  variant; mono is reserved for eyebrows, chrome, captions and labels.
+*/
+.deck-shell {
+  --act-accent: var(--direct);
+  --act-progress: 0;
+  --deck-progress: 0%;
+  --fs-chrome: 0.6rem;
+  --fs-caption: 0.68rem;
+  --fs-eyebrow: clamp(0.66rem, 0.75vw, 0.78rem);
+  --fs-lead: clamp(1.05rem, 1.35vw, 1.4rem);
+  --fs-h-visual: clamp(2.1rem, 3.4vw, 3.5rem);
+  --fs-h-split: clamp(2.6rem, 4.4vw, 4.6rem);
+  --fs-h-closing: clamp(3rem, 5.4vw, 5.6rem);
+  --fs-h-question: clamp(3.4rem, 6.6vw, 7rem);
+  --fs-h-cover: clamp(4.4rem, 9vw, 9rem);
+  --fs-quote: clamp(1.9rem, 3.3vw, 3.4rem);
+  --lh-display: 1.02;
+  --lh-quote: 1.14;
+  --track-display: -0.03em;
+  --deck-measure: 1280px;
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 64px minmax(0, 1fr) 64px;
+  grid-template-columns: minmax(0, 1fr);
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+
+.deck-shell[data-deck-act='apertura'] {
+  --act-accent: var(--paper);
+}
+
+.deck-shell[data-deck-act='anclaje'] {
+  --act-accent: var(--direct);
+}
+
+.deck-shell[data-deck-act='distancia'] {
+  --act-accent: color-mix(in srgb, var(--direct) 38%, var(--reference));
+}
+
+.deck-shell[data-deck-act='alcance'] {
+  --act-accent: var(--reference);
+}
+
+/* Ambient field: one hairline ring, two gradient orbits, a masked grid. No filters. */
+
+.deck-ambient {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.deck-ambient::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(68vw, 980px);
+  aspect-ratio: 1;
+  content: '';
+  border: 1px solid color-mix(in srgb, var(--act-accent) 16%, transparent);
+  border-radius: 50%;
+  opacity: 0.42;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(calc(0.72 + var(--act-progress) * 0.24));
+  /* The ring's hue changes with the act wash; only its scale transitions (transform-only policy). */
+  transition: transform var(--m-d-xl) var(--m-ease-out);
+}
+
+/*
+  The grid is a masked container; the pattern lives on an oversized pseudo-element
+  that drifts with `transform` (never background-position on a full-viewport layer).
+*/
+.deck-grid {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0.16;
+  mask-image: radial-gradient(circle at center, black, transparent 74%);
+  transition: opacity var(--m-d-m) ease;
+}
+
+.deck-grid::before {
+  position: absolute;
+  inset: -64px;
+  content: '';
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: translate(calc(var(--act-progress) * 24px), calc(var(--act-progress) * -18px));
+  transition: transform var(--m-d-xl) var(--m-ease-out);
+}
+
+.deck-orbit {
+  position: absolute;
+  width: 52vw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.8;
+  transition: transform var(--m-d-xl) var(--m-ease-out), opacity var(--m-d-m) ease;
+}
+
+/*
+  Opening (motion-12): the room lights up before the first word. `data-deck-transition`
+  is 'opening' only until the first navigation, so these run exactly once — also on deep links.
+  The keyframes omit `to`, so each element animates towards its own resting value.
+*/
+.deck-shell[data-deck-transition='opening'] .deck-grid {
+  animation: ambient-in var(--m-d-xl) var(--m-ease-out) both;
+}
+
+.deck-shell[data-deck-transition='opening'] .deck-orbit {
+  animation: ambient-in calc(var(--m-d-xl) * 1.3) var(--m-ease-out) both;
+}
+
+.deck-shell[data-deck-transition='opening'] .deck-ambient::before {
+  animation: ring-in var(--m-d-xl) var(--m-ease-settle) both;
+}
+
+@keyframes ambient-in {
+  from { opacity: 0; }
+}
+
+@keyframes ring-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.55);
+  }
+}
+
+/*
+  Act wash (motion-4): a static radial gradient in the incoming act's colour sweeps
+  from the corner the slide travels from. Opacity + transform only; issued once per
+  act turn by the deck (never in the reduced profile) and removed when it ends.
+*/
+.deck-act-wash {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(60% 60% at 82% 88%, color-mix(in srgb, var(--act-accent) 22%, transparent), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: 82% 88%;
+  animation: act-wash var(--m-d-xl) var(--m-ease-inout) var(--m-d-xs) both;
+  will-change: transform, opacity;
+}
+
+.deck-act-wash[data-direction='backward'] {
+  background: radial-gradient(60% 60% at 18% 12%, color-mix(in srgb, var(--act-accent) 22%, transparent), transparent 70%);
+  transform-origin: 18% 12%;
+}
+
+@keyframes act-wash {
+  0% { opacity: 0; transform: scale(0.86); }
+  35% { opacity: 0.9; }
+  100% { opacity: 0; transform: scale(1.12); }
+}
+
+.orbit-direct {
+  top: -30%;
+  left: -22%;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--direct) 11%, transparent) 0%,
+    color-mix(in srgb, var(--direct) 5%, transparent) 32%,
+    transparent 70%
+  );
+}
+
+.orbit-reference {
+  right: -22%;
+  bottom: -32%;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--reference) 11%, transparent) 0%,
+    color-mix(in srgb, var(--reference) 5%, transparent) 32%,
+    transparent 70%
+  );
+}
+
+.deck-shell[data-deck-act='distancia'] .deck-orbit {
+  opacity: 1;
+  transform: scale(1.18) translateX(10%);
+}
+
+.deck-shell[data-deck-act='alcance'] .orbit-reference {
+  opacity: 1;
+  transform: scale(1.32) translate(-8%, -4%);
+}
+
+.deck-shell[data-deck-variant='question'] .deck-grid,
+.deck-shell[data-deck-variant='cover'] .deck-grid {
+  opacity: 0.08;
+}
+
+/* Chrome */
+
+.deck-header,
+.deck-footer {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  background: color-mix(in srgb, var(--bg-deep) 84%, transparent);
+  backdrop-filter: blur(18px);
+  transition: transform var(--m-d-m) var(--m-ease-out), opacity var(--m-d-s) ease;
+}
+
+.deck-header {
+  border-bottom: 1px solid var(--line);
+}
+
+/*
+  Fullscreen auto-hide (interaction-07). The rows keep their 64px so nothing
+  reflows; the chrome only slides off the stage (transform + opacity) and the
+  shell's overflow clips it. It is never aria-hidden: keyboard focus landing in
+  it (`:focus-within`) always brings it back, so no one operates invisible buttons.
+*/
+.deck-shell[data-chrome-hidden='true'] {
+  cursor: none;
+}
+
+.deck-shell[data-chrome-hidden='true'] .deck-header {
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+.deck-shell[data-chrome-hidden='true'] .deck-footer {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+.deck-shell[data-chrome-hidden='true'] .deck-header:focus-within,
+.deck-shell[data-chrome-hidden='true'] .deck-footer:focus-within {
+  opacity: 1;
+  transform: none;
+}
+
+.deck-shell[data-chrome-hidden='true'][data-laser-enabled='true'] .deck-stage {
+  cursor: crosshair;
+}
+
+.deck-footer {
+  border-top: 1px solid var(--line);
+}
+
+.deck-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+.deck-brand .brand-mark {
+  transform: scale(0.78);
+  transform-origin: left center;
+}
+
+.deck-quick-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.deck-quick-actions button {
+  min-height: 36px;
+  padding: 0.35rem 0.65rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.deck-quick-actions button:hover {
+  color: var(--paper);
+  background: var(--surface);
+  border-color: var(--line-strong);
+}
+
+/* Stage: one column, two rows — the exposition and the footnote. */
+
+.deck-stage {
+  --laser-x: 50%;
+  --laser-y: 50%;
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  padding: clamp(0.9rem, 2.4vh, 1.6rem) clamp(1.2rem, 5vw, 4.5rem) clamp(0.5rem, 1.4vh, 0.9rem);
+  row-gap: clamp(0.4rem, 1.2vh, 0.75rem);
+  overflow: hidden;
+}
+
+/*
+  Act folio in the left gutter (replaces the act watermark). The folio is a fixed
+  column; the mark inside it is keyed per act, so on an act turn the outgoing and
+  incoming marks overlap in place (one lifts away, the next rises) and within an
+  act nothing moves. The mark centres itself with `translate` so framer's `transform`
+  composes on top.
+*/
+
+.deck-act-folio {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: clamp(0.4rem, 1.2vw, 1.1rem);
+  width: clamp(2.6rem, 3.6vw, 3.6rem);
+  pointer-events: none;
+}
+
+.deck-act-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  translate: -50% -50%;
+}
+
+.deck-act-numeral {
+  color: color-mix(in srgb, var(--act-accent) 18%, transparent);
+  font-family: var(--font-display);
+  font-size: clamp(3.4rem, 8vh, 5.2rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 0.8;
+  transition: color var(--m-d-l) ease;
+}
+
+.deck-act-name {
+  color: color-mix(in srgb, var(--act-accent) 55%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transition: color var(--m-d-l) ease;
+}
+
+/* Ending beat: at the last reveal of the last slide the gutter numeral takes the act colour. */
+.deck-shell[data-deck-complete='true'] .deck-act-numeral {
+  color: color-mix(in srgb, var(--act-accent) 42%, transparent);
+}
+
+.deck-shell[data-laser-enabled='true'] .deck-stage {
+  cursor: crosshair;
+}
+
+.deck-laser {
+  position: absolute;
+  z-index: 40;
+  top: var(--laser-y);
+  left: var(--laser-x);
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: opacity var(--m-d-xs) ease;
+}
+
+.deck-stage[data-laser-visible='true'] .deck-laser {
+  opacity: 1;
+}
+
+.deck-laser-core,
+.deck-laser-aura {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.deck-laser-core {
+  width: 9px;
+  height: 9px;
+  background: #ff4c5e;
+  box-shadow: 0 0 7px #fff, 0 0 18px #ff4054, 0 0 36px rgba(255, 64, 84, 0.72);
+}
+
+.deck-laser-aura {
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(255, 91, 108, 0.55);
+  box-shadow: inset 0 0 20px rgba(255, 64, 84, 0.14);
+  animation: laser-aura 1.4s ease-out infinite;
+}
+
+/* The aura only loops while the dot is on screen; a hidden laser must not cost a frame. */
+.deck-stage:not([data-laser-visible='true']) .deck-laser-aura {
+  animation-play-state: paused;
+}
+
+.deck-laser-toggle[aria-pressed='true'] {
+  color: #ff98a4;
+  background: rgba(255, 64, 84, 0.1);
+  border-color: rgba(255, 91, 108, 0.5);
+}
+
+/*
+  Laser trail (interaction-06): a stage-level canvas under the dot, a sibling of
+  the slide so it never enters the slide's scroll box. It only exists as a layer
+  while the laser is on; the script draws nothing under reduced motion or touch.
+*/
+.deck-laser-trail {
+  position: absolute;
+  z-index: 39;
+  inset: 0;
+  display: none;
+  width: 100%;
+  height: 100%;
+  opacity: 0.62;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* The layer exists only when the script will draw on it (never under the static budget). */
+.deck-shell[data-laser-enabled='true']:not([data-motion-budget='static']) .deck-laser-trail {
+  display: block;
+}
+
+@keyframes laser-aura {
+  0% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.55); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.32); }
+}
+
+/* Slide: head / body (/ foot) grid on a 1280px measure. */
+
+.deck-slide {
+  grid-row: 1;
+  display: grid;
+  grid-template-rows: [head] auto [body] minmax(0, 1fr);
+  grid-template-areas: 'head' 'body';
+  grid-template-columns: minmax(0, 1fr);
+  width: min(var(--deck-measure), 100%);
+  height: 100%;
+  justify-self: center;
+  align-content: start;
+  row-gap: clamp(0.6rem, 1.8vh, 1.2rem);
+  text-align: center;
+}
+
+/*
+  A slide with a diagram and a body (#descripcion): the formula shares the caption
+  row of the figure (anchored to the bottom-right of the body area) instead of
+  reserving a foot row, so the drawing keeps the full body height and nothing
+  reflows when the formula appears.
+*/
+.deck-slide[data-foot='true'] {
+  position: relative;
+  grid-template-rows: [head] auto [body] minmax(0, 1fr);
+  grid-template-areas: 'head' 'body';
+}
+
+.slide-head {
+  grid-area: head;
+  display: grid;
+  justify-items: center;
+  row-gap: clamp(0.45rem, 1.2vh, 0.8rem);
+}
+
+.deck-slide .slide-eyebrow {
+  margin: 0;
+  font-size: var(--fs-eyebrow);
+  letter-spacing: 0.14em;
+}
+
+.deck-slide h1 {
+  max-width: 22ch;
+  margin: 0;
+  color: var(--paper-strong);
+  font-family: var(--font-display);
+  font-size: var(--fs-h-split);
+  font-weight: 500;
+  letter-spacing: var(--track-display);
+  line-height: var(--lh-display);
+  text-wrap: balance;
+}
+
+.deck-slide h1 em,
+.accent-title {
+  color: var(--direct-bright);
+  font-weight: 400;
+}
+
+.slide-subtitle {
+  max-width: 56ch;
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: var(--fs-lead);
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.slide-variant-visual h1,
+.slide-closing h1 {
+  max-width: 34ch;
+}
+
+.slide-variant-visual h1 {
+  font-size: var(--fs-h-visual);
+}
+
+.slide-closing h1 {
+  font-size: var(--fs-h-closing);
+}
+
+.slide-question,
+.slide-cover {
+  grid-template-rows: auto auto;
+  grid-template-areas: 'head' 'body';
+  align-content: center;
+}
+
+.slide-question h1 {
+  max-width: 26ch;
+  font-size: var(--fs-h-question);
+  font-style: italic;
+  line-height: 0.95;
+}
+
+.slide-question h1 em {
+  background: linear-gradient(90deg, var(--direct-bright), var(--reference-bright));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.slide-question .slide-subtitle {
+  margin-top: clamp(0.8rem, 2vh, 1.4rem);
+  font-family: var(--font-display);
+  font-size: var(--fs-lead);
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.slide-cover h1 {
+  max-width: 12ch;
+  font-size: var(--fs-h-cover);
+  letter-spacing: -0.04em;
+  line-height: 0.84;
+}
+
+.slide-cover .slide-subtitle {
+  margin-top: clamp(0.8rem, 2vh, 1.4rem);
+}
+
+.slide-question .slide-body,
+.slide-cover .slide-body {
+  margin-top: clamp(1.4rem, 4vh, 2.6rem);
+}
+
+.slide-quote {
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: 'head body';
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+  align-items: center;
+  /* The hanging guillemet must not enter the folio column: give the quote its own gutter. */
+  padding-inline-start: clamp(2.6rem, 3.6vw, 3.6rem);
+  column-gap: clamp(2rem, 4vw, 4rem);
+  text-align: left;
+}
+
+.slide-quote .slide-head {
+  justify-items: start;
+}
+
+.slide-quote h1 {
+  max-width: 32ch;
+  padding: 0;
+  font-size: var(--fs-quote);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: var(--lh-quote);
+  text-indent: -0.4em;
+  border-left: 0;
+}
+
+.slide-quote .slide-body {
+  width: 100%;
+  margin: 0;
+}
+
+/* Split slides read as one centred block: title and body keep a capped rhythm between them. */
+.slide-split {
+  grid-template-rows: [head] auto [body] auto;
+  align-content: center;
+  row-gap: clamp(1.5rem, 5vh, 3.5rem);
+}
+
+.slide-split .slide-body {
+  align-self: start;
+}
+
+/* Footnote rail: hairline rule, act-coloured rule segment, page reference, quote. */
+
+.deck-source-rail {
+  position: relative;
+  z-index: 8;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  width: min(var(--deck-measure), 100%);
+  margin: 0;
+  padding: 0.55rem 0 0;
+  justify-self: center;
+  align-items: baseline;
+  column-gap: 1.1rem;
+  text-align: left;
+  border-top: 1px solid var(--line);
+  pointer-events: none;
+}
+
+/* The act-coloured footnote rule. --rail-rule is the fraction of the measure it covers; A2 extends it to 1 on the ending beat. */
+.deck-source-rail::before {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  content: '';
+  background: var(--act-accent);
+  transform: scaleX(var(--rail-rule, 0.18));
+  transform-origin: left center;
+  transition: transform var(--m-d-xl) var(--m-ease-out), background var(--m-d-l) ease;
+}
+
+/* Ending beat: the footnote rule extends to the full measure. */
+.deck-shell[data-deck-complete='true'] .deck-source-rail {
+  --rail-rule: 1;
+}
+
+/*
+  The footnote follows the slide, not the keypress: its text fades while the outgoing
+  slide exits (data-state='leaving') and the new citation rises once the exit is over.
+*/
+.deck-source-rail[data-state='leaving'] > * {
+  opacity: 0;
+  transition: opacity var(--m-d-s) var(--m-ease-in);
+}
+
+.deck-source-rail > * {
+  animation: rail-in var(--m-d-m) var(--m-ease-out) both;
+}
+
+@keyframes rail-in {
+  from { opacity: 0; transform: translateY(0.35em); }
+}
+
+.deck-source-rail figcaption {
+  order: -1;
+  color: var(--act-accent);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.deck-source-rail blockquote {
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: clamp(0.86rem, 1.05vw, 1rem);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Diagram figure: the drawing fills the body row; the caption sits under its left edge. */
+
+.slide-visual {
+  position: relative;
+  grid-area: body;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  row-gap: 0.5rem;
+  place-items: center;
+}
+
+.slide-visual > .concept-visual {
+  grid-row: 1;
+  grid-column: 1;
+  width: 100%;
+  height: 100%;
+  max-height: 660px;
+}
+
+.visual-stage-cue {
+  grid-row: 2;
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.75rem;
+  color: var(--paper);
+  pointer-events: none;
+  text-align: left;
+}
+
+.visual-stage-ruler {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.visual-stage-ruler b {
+  display: block;
+  width: 18px;
+  height: 3px;
+  background: var(--line-strong);
+  border-radius: 999px;
+  transition: background var(--m-d-m) ease;
+}
+
+.visual-stage-ruler b[data-state='complete'] {
+  background: color-mix(in srgb, var(--act-accent) 58%, var(--line-strong));
+}
+
+.visual-stage-ruler b[data-state='current'] {
+  background: var(--act-accent);
+}
+
+.visual-stage-cue-index {
+  color: var(--act-accent);
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.visual-stage-cue-label {
+  display: inline-block;
+  padding-block: 0.1em 0.2em;
+  overflow: hidden;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+}
+
+/*
+  Stage cue choreography (motion-7). The cue is re-keyed per stage, so these run
+  on every reveal step: the label rises under its mask first, the numeral rolls
+  in 80 ms later in the travel direction. Label first, picture second — the
+  order the speaker uses.
+*/
+.visual-stage-cue-label i {
+  display: inline-block;
+  font-style: inherit;
+  animation: cue-label-rise var(--m-d-m) var(--m-ease-settle) both;
+}
+
+.visual-stage-cue-index b {
+  display: inline-block;
+  font-weight: inherit;
+  animation: cue-roll var(--m-d-m) var(--m-ease-out) calc(var(--m-stagger) + 10ms) both;
+}
+
+.deck-stage[data-travel='backward'] .visual-stage-cue-index b {
+  animation-name: cue-roll-back;
+}
+
+.deck-stage[data-travel='backward'] .visual-stage-cue-label i {
+  animation-name: cue-label-sink;
+}
+
+@keyframes cue-label-rise {
+  from { opacity: 0; transform: translateY(1.1em); }
+}
+
+@keyframes cue-label-sink {
+  from { opacity: 0; transform: translateY(-1.1em); }
+}
+
+@keyframes cue-roll {
+  from { opacity: 0; transform: translateY(0.6em); }
+}
+
+@keyframes cue-roll-back {
+  from { opacity: 0; transform: translateY(-0.6em); }
+}
+
+/*
+  Reduced profile: the one-shot chrome keyframes are dropped altogether (their
+  resting state is the end state), so getAnimations() holds no finished stubs.
+*/
+.deck-shell[data-motion-profile='reduced'] :is(.deck-grid, .deck-orbit, .visual-stage-cue-label i, .visual-stage-cue-index b, .deck-source-rail > *, .deck-reveal-steps i, .deck-arrow span),
+.deck-shell[data-motion-profile='reduced'] .deck-ambient::before {
+  animation: none !important;
+}
+
+.slide-visual .semantic-node[data-stage],
+.slide-visual .edge-group[data-sequence] {
+  transition: opacity var(--m-d-m) ease;
+}
+
+.slide-visual[data-semantic-threshold='1'] .semantic-node:is([data-stage='2'], [data-stage='3'], [data-stage='4'], [data-stage='5']),
+.slide-visual[data-semantic-threshold='2'] .semantic-node:is([data-stage='3'], [data-stage='4'], [data-stage='5']),
+.slide-visual[data-semantic-threshold='3'] .semantic-node:is([data-stage='4'], [data-stage='5']),
+.slide-visual[data-semantic-threshold='4'] .semantic-node[data-stage='5'] {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.slide-visual[data-semantic-threshold='1'] .edge-group:is([data-sequence='1'], [data-sequence='2'], [data-sequence='3'], [data-sequence='4']),
+.slide-visual[data-semantic-threshold='2'] .edge-group:is([data-sequence='2'], [data-sequence='3'], [data-sequence='4']),
+.slide-visual[data-semantic-threshold='3'] .edge-group:is([data-sequence='3'], [data-sequence='4']),
+.slide-visual[data-semantic-threshold='4'] .edge-group[data-sequence='4'] {
+  opacity: 0;
+}
+
+/* The stage arrival itself is scripted by useStageArrival + visuals.css (data-stage-role). */
+
+.slide-visual:not([data-semantic-state='alcance']) .anchor-reach .world-fragment,
+.slide-visual:not([data-semantic-state='alcance']) .anchor-reach [data-layer='reference-world'] {
+  opacity: 0 !important;
+}
+
+.slide-visual-hint {
+  display: none;
+}
+
+.slide-body {
+  grid-area: body;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+}
+
+.slide-body[data-area='foot'] {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  grid-area: body;
+  width: auto;
+  justify-self: end;
+  align-self: end;
+}
+
+/* Footer: reading apparatus — steps with the current label, four act segments, serif folio. */
+
+.deck-progress-wrap {
+  display: flex;
+  min-width: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.deck-reveal-steps {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  gap: 0.3rem;
+  list-style: none;
+}
+
+.deck-reveal-steps button {
+  position: relative;
+  display: inline-grid;
+  grid-auto-flow: column;
+  width: auto;
+  min-width: 44px;
+  height: 44px;
+  align-items: center;
+  padding: 0;
+  gap: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Step bars are transform-only (motion-8): a 20px bar scaled to 0.6 at rest, full when current. */
+.deck-reveal-steps button i {
+  display: block;
+  width: 20px;
+  height: 3px;
+  margin-inline: auto;
+  background: var(--line-strong);
+  border-radius: 999px;
+  transform: scaleX(0.6);
+  transform-origin: left center;
+  transition: transform var(--m-d-s) var(--m-ease-out), background var(--m-d-s) ease, box-shadow var(--m-d-s) ease;
+}
+
+.deck-reveal-steps button[data-state='complete'] i {
+  background: color-mix(in srgb, var(--act-accent) 58%, var(--line-strong));
+}
+
+.deck-reveal-steps button[data-state='current'] {
+  padding: 0 0.6rem 0 0.4rem;
+  gap: 0.5rem;
+}
+
+.deck-reveal-steps button[data-state='current'] i {
+  background: var(--act-accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--act-accent) 70%, transparent);
+  transform: scaleX(1);
+  animation: step-fill var(--m-d-s) var(--m-ease-out) both;
+}
+
+@keyframes step-fill {
+  from { transform: scaleX(0.4); }
+}
+
+.deck-reveal-steps button span {
+  position: absolute;
+  bottom: calc(100% + 0.45rem);
+  left: 50%;
+  width: max-content;
+  max-width: 160px;
+  padding: 0.32rem 0.5rem;
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  letter-spacing: 0.05em;
+  background: var(--surface-glass);
+  border: 1px solid var(--line-strong);
+  border-radius: 0.35rem;
+  opacity: 0;
+  pointer-events: none;
+  text-transform: uppercase;
+  transform: translate(-50%, 5px);
+  transition: opacity var(--m-d-s) ease, transform var(--m-d-s) ease;
+}
+
+.deck-reveal-steps button:hover span,
+.deck-reveal-steps button:focus-visible span {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* The current step names itself inline; the others keep the hover tooltip. */
+.deck-reveal-steps button[data-state='current'] span {
+  position: static;
+  max-width: 220px;
+  padding: 0;
+  overflow: hidden;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-style: italic;
+  letter-spacing: 0;
+  line-height: 1;
+  background: none;
+  border: 0;
+  opacity: 1;
+  text-overflow: ellipsis;
+  text-transform: none;
+  transform: none;
+  white-space: nowrap;
+}
+
+.deck-progress {
+  display: grid;
+  grid-template-columns: 2fr 6fr 3fr 3fr;
+  width: min(24vw, 280px);
+  height: 3px;
+  gap: 4px;
+}
+
+.deck-progress i {
+  --segment-accent: var(--paper);
+  position: relative;
+  display: block;
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+
+.deck-progress i::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: var(--segment-accent);
+  border-radius: inherit;
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
+  transition: transform var(--m-d-m) var(--m-ease-out), box-shadow var(--m-d-l) ease;
+}
+
+.deck-progress i[data-segment='anclaje'] { --segment-accent: var(--direct); }
+.deck-progress i[data-segment='distancia'] { --segment-accent: color-mix(in srgb, var(--direct) 38%, var(--reference)); }
+.deck-progress i[data-segment='alcance'] { --segment-accent: var(--reference); }
+
+.deck-progress i[data-state='current']::after {
+  box-shadow: 0 0 8px var(--segment-accent);
+}
+
+/* Ending beat: the four acts read complete, each lit in its own colour. */
+.deck-shell[data-deck-complete='true'] .deck-progress i::after {
+  box-shadow: 0 0 8px var(--segment-accent);
+  transform: scaleX(1);
+}
+
+.deck-folio {
+  display: grid;
+  justify-items: end;
+  gap: 0.12rem;
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+}
+
+.deck-current-section {
+  color: var(--muted-2);
+  font-size: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.deck-folio-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.deck-folio-count b {
+  display: block;
+  color: var(--paper-strong);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-weight: 500;
+  line-height: 1;
+  transition: color var(--m-d-l) ease;
+}
+
+/* Fixed-height mask for the odometer roll: the exiting digit is popped out of flow, nothing reflows. */
+.deck-counter {
+  position: relative;
+  display: inline-grid;
+  height: 1.25rem;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+/* Ending beat: the folio turns the act colour. */
+.deck-shell[data-deck-complete='true'] .deck-folio-count b {
+  color: var(--act-accent);
+}
+
+.deck-arrow {
+  display: inline-flex;
+  min-width: 92px;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  cursor: pointer;
+}
+
+.deck-arrow:hover:not(:disabled) {
+  color: var(--paper);
+  background: var(--surface);
+  border-color: var(--line-strong);
+}
+
+.deck-arrow:disabled {
+  opacity: 0.22;
+  cursor: not-allowed;
+}
+
+.deck-arrow span {
+  display: inline-block;
+  font-size: 1.1rem;
+}
+
+/* The slide is finished: the next arrow gives one 3px nudge so the presenter does not press once more expecting a reveal. */
+.deck-footer[data-reveal-complete='true'] .deck-arrow:last-child span {
+  animation: arrow-nudge var(--m-d-m) var(--m-ease-inout) 1;
+}
+
+@keyframes arrow-nudge {
+  50% { transform: translateX(3px); }
+}
+
+/*
+  Motion budget (interaction-12). The deck mirrors useMotionBudget() as
+  data-motion-budget on the shell: 'off' (hidden tab, overlay open) pauses every
+  CSS keyframe on the stage and in the ambient field; 'static' (reduced motion,
+  Save-Data) pauses the loops that would otherwise keep running.
+*/
+.deck-shell[data-motion-budget='off'] :is(.deck-laser-aura, .deck-act-wash),
+.deck-shell[data-motion-budget='static'] .deck-laser-aura,
+.deck-shell[data-motion-budget='idle'] .deck-laser-aura {
+  animation-play-state: paused !important;
+}
+
+.deck-arrow small {
+  font-family: var(--font-mono);
+  font-size: var(--fs-chrome);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Overlays */
+
+.deck-overlay {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  padding: 1.5rem;
+  place-items: center;
+  background: rgba(3, 8, 10, 0.78);
+  backdrop-filter: blur(16px);
+}
+
+.overlay-panel {
+  width: min(1000px, 100%);
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  background: var(--surface-glass);
+  border: 1px solid var(--line-strong);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.overlay-panel > header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.overlay-panel > header h2 {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.overlay-panel > header button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: var(--muted);
+  font-size: 1.8rem;
+  line-height: 1;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Index as a table of contents */
+
+.deck-overview {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.overview-status {
+  margin: 0 0 1.1rem;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.overview-status strong {
+  color: var(--paper-strong);
+  font-weight: 500;
+}
+
+.overview-status span {
+  color: var(--reference-bright);
+}
+
+.overview-sections {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 0.75rem;
+  gap: 0;
+  border-block: 1px solid var(--line);
+}
+
+.overview-sections button {
+  --overview-accent: var(--paper);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  min-height: 60px;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  gap: 0.05rem 0.8rem;
+  color: var(--muted);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.overview-sections button:first-child {
+  border-left: 0;
+}
+
+.overview-sections button[data-act='anclaje'] { --overview-accent: var(--direct); }
+.overview-sections button[data-act='distancia'] { --overview-accent: color-mix(in srgb, var(--direct) 38%, var(--reference)); }
+.overview-sections button[data-act='alcance'] { --overview-accent: var(--reference); }
+
+.overview-sections button:hover,
+.overview-sections button.is-active {
+  color: var(--paper-strong);
+}
+
+.overview-sections button.is-active {
+  box-shadow: inset 0 -2px var(--overview-accent);
+}
+
+.overview-sections b {
+  grid-row: 1 / 3;
+  min-width: 1.6rem;
+  color: var(--overview-accent);
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.overview-sections span {
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.overview-sections small {
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.slide-index-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(7, auto);
+  grid-auto-flow: column;
+  padding: 0.35rem 0 0;
+  gap: 0 2.5rem;
+}
+
+.slide-index-grid button {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr) auto;
+  min-height: 50px;
+  align-items: center;
+  padding: 0.55rem 0.25rem;
+  gap: 0.1rem 0.6rem;
+  color: var(--muted);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.slide-index-grid button:hover,
+.slide-index-grid button.is-active {
+  color: var(--paper-strong);
+}
+
+.slide-index-grid button.is-active {
+  box-shadow: inset 3px 0 var(--direct);
+  padding-left: 0.75rem;
+}
+
+.slide-index-grid span {
+  color: var(--direct);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+}
+
+.slide-index-grid strong {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  font-weight: 400;
+}
+
+.slide-index-grid button small {
+  grid-row: 1;
+  grid-column: 3;
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  letter-spacing: 0.05em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.slide-index-grid button[data-act='anclaje'] small { color: var(--direct); }
+.slide-index-grid button[data-act='distancia'] small { color: color-mix(in srgb, var(--direct) 38%, var(--reference)); }
+.slide-index-grid button[data-act='alcance'] small { color: var(--reference); }
+
+/* Speaker notes */
+
+.speaker-notes {
+  --note-scale: 1;
+  padding: 0;
+}
+
+.speaker-notes[data-note-scale='compact'] {
+  --note-scale: 0.9;
+}
+
+.speaker-notes[data-note-scale='large'] {
+  --note-scale: 1.15;
+}
+
+.speaker-console {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.7fr) minmax(310px, 1.25fr) auto;
+  align-items: stretch;
+  gap: 1px;
+  padding: 1px;
+  background: var(--line);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.speaker-console > div {
+  min-width: 0;
+  padding: 1rem 1.15rem;
+  background: var(--bg);
+}
+
+.speaker-console-context {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.speaker-console-context span,
+.speaker-timer > span,
+.speaker-note-scale > span {
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.speaker-console-context strong {
+  color: var(--paper-strong);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.speaker-timer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.speaker-timer > span {
+  align-self: end;
+}
+
+.speaker-timer time {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  color: var(--paper-strong);
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.speaker-timer time[data-running='true'] {
+  color: var(--direct-bright);
+  text-shadow: 0 0 24px var(--direct-soft);
+}
+
+.speaker-timer-controls {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.speaker-timer-controls button,
+.speaker-note-scale button {
+  min-width: 44px;
+  min-height: 32px;
+  padding: 0.3rem 0.5rem;
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.04em;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 0.4rem;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.speaker-timer-controls button:hover:not(:disabled),
+.speaker-note-scale button:hover:not(:disabled) {
+  color: var(--reference-bright);
+  border-color: var(--reference);
+}
+
+.speaker-timer-controls button:disabled,
+.speaker-note-scale button:disabled {
+  color: var(--muted-2);
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.speaker-note-scale {
+  display: grid;
+  grid-template-columns: repeat(2, 44px);
+  align-content: center;
+  gap: 0.35rem;
+}
+
+.speaker-note-scale > span {
+  grid-column: 1 / -1;
+}
+
+.speaker-script {
+  padding: 2rem;
+}
+
+.speaker-script > span {
+  color: var(--direct);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Evidence as a ruled footnote block, matching the deck's rail. */
+
+.speaker-evidence {
+  position: relative;
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 0 1rem;
+  text-align: left;
+  border-block: 1px solid color-mix(in srgb, var(--direct) 40%, var(--line));
+}
+
+.speaker-evidence::before {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 18%;
+  height: 1px;
+  content: '';
+  background: var(--direct);
+}
+
+.speaker-evidence header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.speaker-evidence h4 {
+  margin: 0;
+  color: var(--direct-bright);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.speaker-evidence cite {
+  color: var(--direct);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.speaker-evidence blockquote {
+  max-width: 62ch;
+  margin: 0.65rem 0 0;
+  color: var(--paper-strong);
+  font-family: var(--font-display);
+  font-size: calc(1.3rem * var(--note-scale));
+  font-style: italic;
+  line-height: 1.38;
+}
+
+.speaker-notes .speaker-evidence p {
+  max-width: 72ch;
+  margin: 0.55rem 0 0;
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-size: calc(0.78rem * var(--note-scale));
+  line-height: 1.5;
+}
+
+.speaker-evidence p strong {
+  color: var(--direct-bright);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.speaker-notes > span {
+  color: var(--direct);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.speaker-notes h3 {
+  margin: 0.8rem 0 1.5rem;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 500;
+}
+
+.speaker-notes p {
+  max-width: 70ch;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.65;
+}
+
+.speaker-note {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  color: var(--paper);
+}
+
+.speaker-note__header {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: stretch;
+  gap: 1px;
+  overflow: hidden;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+}
+
+.speaker-notes .speaker-note__header p {
+  max-width: none;
+  margin: 0;
+  padding: 0.8rem 1rem;
+  font-family: var(--font-body);
+  font-size: calc(0.78rem * var(--note-scale));
+  background: var(--surface-2);
+}
+
+.speaker-note__time {
+  color: var(--direct-bright) !important;
+  white-space: nowrap;
+}
+
+.speaker-note__objective strong,
+.speaker-note__time strong {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.speaker-note__beat,
+.speaker-note__pitfall {
+  position: relative;
+  min-width: 0;
+  padding: 1.1rem 1.2rem;
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 0.7rem;
+  overflow: hidden;
+}
+
+.speaker-note__beat::before,
+.speaker-note__pitfall::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  content: '';
+  background: var(--direct);
+}
+
+.speaker-note__beat--explanation::before {
+  background: var(--paper);
+  opacity: 0.45;
+}
+
+.speaker-note__beat--interaction::before {
+  background: var(--reference);
+}
+
+.speaker-note__pitfall::before {
+  background: var(--danger);
+}
+
+.speaker-note h4 {
+  margin: 0 0 0.65rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.speaker-note__beat--opening h4 { color: var(--direct-bright); }
+.speaker-note__beat--interaction h4 { color: var(--reference-bright); }
+.speaker-note__pitfall h4 { color: var(--danger); }
+
+.speaker-notes .speaker-note__content p {
+  max-width: none;
+  margin: 0;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: calc(1.02rem * var(--note-scale));
+  line-height: 1.55;
+}
+
+.speaker-note__transition {
+  grid-column: 1 / -1;
+  padding: 1rem 1.15rem;
+  background: var(--reference-soft);
+  border: 1px solid color-mix(in srgb, var(--reference) 52%, var(--line));
+  border-radius: 0.7rem;
+}
+
+.speaker-notes .speaker-note__transition-copy,
+.speaker-notes .speaker-note__transition-copy p {
+  max-width: none;
+  margin: 0;
+  color: var(--paper-strong);
+  font-size: calc(1.02rem * var(--note-scale));
+  line-height: 1.5;
+}
+
+.speaker-note__transition-copy {
+  margin-top: 0.35rem;
+}
+
+.speaker-note__transition strong {
+  color: var(--reference-bright);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.speaker-next-cue {
+  display: grid;
+  margin: 0 2rem;
+  padding: 1rem 1.2rem;
+  gap: 0.35rem;
+  background: var(--reference-soft);
+  border: 1px solid color-mix(in srgb, var(--reference) 55%, var(--line));
+  border-radius: 0.65rem;
+}
+
+.speaker-next-cue span {
+  color: var(--reference-bright);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.speaker-next-cue strong {
+  color: var(--paper-strong);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.speaker-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 1rem 2rem 2rem;
+  gap: 0.55rem;
+}
+
+.speaker-controls button {
+  min-height: 44px;
+  padding: 0.7rem 0.9rem;
+  color: var(--paper-strong);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.speaker-controls button:hover:not(:disabled) {
+  color: var(--reference-bright);
+  border-color: var(--reference);
+}
+
+.speaker-controls button:disabled {
+  color: var(--muted-2);
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.shortcut-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 0;
+  padding: 1rem;
+  gap: 1px;
+  background: var(--line);
+}
+
+.shortcut-list div {
+  display: grid;
+  min-height: 68px;
+  align-items: center;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  padding: 1rem;
+  column-gap: 1rem;
+  background: var(--bg);
+}
+
+.shortcut-list dt,
+.shortcut-list dd {
+  margin: 0;
+}
+
+.shortcut-list dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.shortcut-list dd {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+/* Responsive */
+
+@media (max-width: 980px) {
+  .deck-act-folio {
+    display: none;
+  }
+
+  /* Compact chrome for the tablet band. */
+  .deck-quick-actions {
+    gap: 0.25rem;
+  }
+
+  .deck-quick-actions button {
+    padding-inline: 0.45rem;
+  }
+
+  .deck-arrow {
+    min-width: 48px;
+  }
+
+  .deck-arrow small {
+    display: none;
+  }
+
+  .deck-progress-wrap {
+    gap: 0.5rem;
+  }
+
+  .deck-progress {
+    width: min(18vw, 200px);
+  }
+
+  .deck-reveal-steps button[data-state='current'] span {
+    max-width: 140px;
+  }
+
+  /* Narrow screens: the figure hugs its caption and centres as a block. */
+  .slide-visual {
+    align-self: center;
+  }
+
+  .slide-visual > .concept-visual {
+    height: auto;
+    max-height: min(52vh, 660px);
+  }
+
+  /* Portrait tablets use the stacked variants; let them grow past their phone width. */
+  .slide-visual > .concept-visual.is-mobile-layout {
+    width: 100%;
+    max-width: min(100%, 520px) !important;
+    max-height: none;
+  }
+
+  /* Without the folio the quote needs no gutter. */
+  .slide-quote {
+    padding-inline-start: 0;
+  }
+
+  /* The formula sits under the figure caption, as the conclusion of the walk. */
+  .deck-slide[data-foot='true'] {
+    grid-template-rows: [head] auto [body] auto [foot] 3.4rem;
+    grid-template-areas: 'head' 'body' 'foot';
+    align-content: center;
+  }
+
+  .deck-slide[data-foot='true'] .slide-visual {
+    align-self: start;
+  }
+
+  .slide-body[data-area='foot'] {
+    position: static;
+    grid-area: foot;
+    justify-self: start;
+    align-self: start;
+    margin-top: 0.4rem;
+  }
+
+  .slide-index-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-auto-flow: row;
+  }
+
+  .speaker-console {
+    grid-template-columns: 1fr 1.35fr;
+  }
+
+  .speaker-note-scale {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr repeat(2, 44px);
+  }
+
+  .speaker-note-scale > span {
+    grid-column: auto;
+    align-self: center;
+  }
+}
+
+/* Touch: every control that a finger lands on is at least 44px tall. */
+@media (pointer: coarse) {
+  .deck-quick-actions button,
+  .deck-arrow,
+  .deck-brand,
+  .speaker-controls button,
+  .speaker-note-scale button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 680px) {
+  .deck-shell {
+    grid-template-rows: 52px minmax(0, 1fr) 66px;
+  }
+
+  .deck-brand {
+    min-height: 44px;
+    padding-inline: 0.2rem;
+  }
+
+  .deck-header,
+  .deck-footer {
+    padding-inline: 0.65rem;
+  }
+
+  .deck-brand > span:last-child {
+    display: none;
+  }
+
+  .deck-quick-actions {
+    gap: 0.25rem;
+  }
+
+  .deck-quick-actions button {
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 0.3rem;
+    font-size: 0;
+  }
+
+  .deck-quick-actions button kbd {
+    margin: 0;
+    font-size: 0.52rem;
+  }
+
+  /* Phones project nothing and pay the most for layers: no act wash (motion-10). */
+  .deck-act-wash {
+    display: none;
+  }
+
+  /* The stage scrolls; the footnote sticks to its bottom edge. The slide row is at
+     least as tall as its content, so a long body extends the scroll height instead
+     of painting under the sticky footnote. */
+  .deck-stage {
+    grid-template-rows: minmax(max-content, 1fr) auto;
+    padding: 0.75rem 0.85rem 0;
+    row-gap: 0.5rem;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-color: var(--reference) var(--line);
+    scrollbar-width: thin;
+  }
+
+  .deck-slide {
+    height: auto;
+    min-height: 0;
+    padding-block: 0.25rem 0.5rem;
+    row-gap: 0.7rem;
+    align-content: start;
+  }
+
+  .deck-slide[data-foot='true'] {
+    grid-template-rows: [head] auto [body] auto [foot] auto;
+    grid-template-areas: 'head' 'body' 'foot';
+    align-content: start;
+  }
+
+  .slide-body[data-area='foot'] {
+    margin-top: 0.2rem;
+  }
+
+  .deck-slide .slide-eyebrow {
+    font-size: 0.56rem;
+  }
+
+  .deck-slide h1 {
+    max-width: none;
+    font-size: clamp(1.7rem, 8.2vw, 2.3rem);
+  }
+
+  .slide-subtitle {
+    font-size: 0.98rem;
+  }
+
+  .slide-question h1 {
+    font-size: clamp(2.6rem, 12.5vw, 3.6rem);
+  }
+
+  .slide-cover h1 {
+    font-size: clamp(3rem, 14vw, 4.2rem);
+  }
+
+  .slide-quote {
+    grid-template-rows: auto auto;
+    grid-template-areas: 'head' 'body';
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    row-gap: 0.9rem;
+    text-align: center;
+  }
+
+  .slide-quote .slide-head {
+    justify-items: center;
+  }
+
+  .slide-split {
+    grid-template-rows: [head] auto [body] auto;
+    align-content: start;
+    row-gap: 1rem;
+  }
+
+  .slide-split .slide-body {
+    align-self: start;
+  }
+
+  .slide-quote h1 {
+    max-width: none;
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+    line-height: 1.18;
+    text-indent: 0;
+  }
+
+  .deck-source-rail {
+    position: sticky;
+    z-index: 8;
+    bottom: 0;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0.4rem 0 0.45rem;
+    row-gap: 0.15rem;
+    align-items: start;
+    background: color-mix(in srgb, var(--bg-deep) 94%, transparent);
+  }
+
+  .deck-source-rail blockquote {
+    font-size: 0.8rem;
+  }
+
+  .deck-source-rail figcaption {
+    font-size: 0.5rem;
+  }
+
+  .slide-visual {
+    width: 100%;
+    overflow-x: auto;
+    justify-items: start;
+    padding-bottom: 0.35rem;
+    scrollbar-color: var(--reference) var(--line);
+    scrollbar-width: thin;
+  }
+
+  .slide-visual {
+    align-self: start;
+  }
+
+  .slide-visual > .concept-visual {
+    height: auto;
+    max-height: none;
+  }
+
+  .slide-visual-hint {
+    grid-row: 2;
+    grid-column: 1;
+    display: inline-flex;
+    width: max-content;
+    align-items: center;
+    justify-self: end;
+    padding: 0.3rem 0.5rem;
+    gap: 0.3rem;
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 0.46rem;
+    letter-spacing: 0.08em;
+    background: var(--surface-glass);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+
+  .slide-visual:has(.is-mobile-layout) {
+    justify-items: center;
+    overflow-x: hidden;
+    padding-bottom: 0;
+  }
+
+  .slide-visual:has(.is-mobile-layout) .slide-visual-hint {
+    display: none;
+  }
+
+  .slide-visual .concept-visual:not(.is-mobile-layout) {
+    width: 740px;
+    max-width: none;
+    max-height: min(45vh, 440px);
+  }
+
+  .slide-visual .direct-constellation:not(.is-mobile-layout),
+  .slide-visual .subject-relation:not(.is-mobile-layout),
+  .slide-visual .candidate-paradox:not(.is-mobile-layout) {
+    width: 660px;
+  }
+
+  .visual-stage-cue {
+    gap: 0.55rem;
+  }
+
+  .visual-stage-cue-label {
+    font-size: 0.9rem;
+  }
+
+  .overview-sections,
+  .speaker-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-sections button {
+    border-left: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .overview-sections button:last-child {
+    border-bottom: 0;
+  }
+
+  .speaker-console,
+  .speaker-note,
+  .speaker-note__header {
+    grid-template-columns: 1fr;
+  }
+
+  .speaker-note-scale {
+    grid-column: auto;
+  }
+
+  .speaker-script {
+    padding: 1.2rem;
+  }
+
+  .speaker-note__header,
+  .speaker-note__transition {
+    grid-column: 1;
+  }
+
+  .speaker-next-cue {
+    margin-inline: 1.2rem;
+  }
+
+  .speaker-controls {
+    margin: 0.8rem 1.2rem 1.2rem;
+  }
+
+  .deck-overview {
+    padding: 0.8rem;
+  }
+
+  /* Two-row footer: the act strip runs across the top, then arrows, steps and folio. */
+  .deck-footer {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    padding-top: 4px;
+  }
+
+  .deck-footer .deck-progress {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    width: auto;
+    height: 2px;
+    gap: 2px;
+  }
+
+  .deck-progress i {
+    border-radius: 0;
+  }
+
+  .deck-arrow {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .deck-arrow small {
+    display: none;
+  }
+
+  .deck-progress-wrap {
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .deck-reveal-steps {
+    gap: 0;
+  }
+
+  /* Five steps + folio must fit 412px: hit boxes stay 44px, only a 2px gutter overlaps. */
+  .deck-reveal-steps li + li {
+    margin-left: -2px;
+  }
+
+  .deck-reveal-steps button[data-state='current'] {
+    padding: 0;
+    gap: 0;
+  }
+
+  .deck-reveal-steps button[data-state='current'] span {
+    display: none;
+  }
+
+  .deck-current-section {
+    font-size: 0.42rem;
+    letter-spacing: 0.04em;
+  }
+
+  .deck-folio-count b {
+    font-size: 1.1rem;
+  }
+
+  .deck-overlay {
+    padding: 0.5rem;
+  }
+
+  .slide-index-grid,
+  .shortcut-list {
+    grid-template-columns: 1fr;
+  }
+
+  .overlay-panel {
+    max-height: 92vh;
+  }
+
+  .speaker-evidence header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+}
+
+/* The minimum supported viewport has room for five 44px reveal targets only
+   when the redundant folio yields its space to the controls. */
+@media (max-width: 360px) {
+  .deck-header,
+  .deck-footer {
+    padding-inline: 0.5rem;
+  }
+
+  .deck-progress-wrap {
+    gap: 0;
+  }
+
+  .deck-reveal-steps {
+    justify-content: center;
+  }
+
+  .deck-folio {
+    display: none;
+  }
+}
+
+/* Short desktop viewports (1366×768): the diagram, not the title, is the hero. */
+@media (max-height: 800px) and (min-width: 681px) {
+  .deck-shell {
+    --fs-h-visual: clamp(1.9rem, 2.8vw, 2.9rem);
+  }
+}
+
+@media (max-height: 720px) and (min-width: 681px) {
+  .deck-shell {
+    grid-template-rows: 52px minmax(0, 1fr) 52px;
+  }
+
+  .deck-stage {
+    padding-block: 0.6rem 0.45rem;
+    row-gap: 0.35rem;
+  }
+
+  .deck-slide {
+    row-gap: 0.55rem;
+  }
+
+  .slide-head {
+    row-gap: 0.35rem;
+  }
+
+  .slide-visual > .concept-visual {
+    max-height: 560px;
+  }
+
+  .deck-source-rail {
+    padding-top: 0.4rem;
+  }
+}
+
+/*
+  Phone landscape (and any viewport under 520px tall): the fixed-height stage cannot
+  hold a diagram, so the stage scrolls like the phone layout with the footnote stuck
+  to its bottom edge, and the display sizes follow the viewport height.
+*/
+@media (max-height: 520px) and (min-width: 681px) {
+  .deck-shell {
+    --fs-eyebrow: 0.6rem;
+    --fs-lead: 0.95rem;
+    --fs-h-visual: clamp(1.4rem, 5.2vh, 1.9rem);
+    --fs-h-split: clamp(1.7rem, 7vh, 2.4rem);
+    --fs-h-closing: clamp(1.9rem, 8vh, 2.8rem);
+    --fs-h-question: clamp(2rem, 9vh, 3rem);
+    --fs-h-cover: clamp(2.4rem, 11vh, 3.6rem);
+    --fs-quote: clamp(1.3rem, 6vh, 1.9rem);
+    grid-template-rows: 48px minmax(0, 1fr) 48px;
+  }
+
+  .deck-act-folio {
+    display: none;
+  }
+
+  .deck-stage {
+    grid-template-rows: minmax(max-content, 1fr) auto;
+    padding: 0.5rem clamp(1rem, 4vw, 3rem) 0;
+    row-gap: 0.4rem;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-color: var(--reference) var(--line);
+    scrollbar-width: thin;
+  }
+
+  .deck-slide {
+    height: auto;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+    row-gap: 0.5rem;
+    grid-template-rows: [head] auto [body] auto;
+    align-content: start;
+  }
+
+  .slide-head {
+    row-gap: 0.25rem;
+  }
+
+  .deck-slide[data-foot='true'] {
+    grid-template-rows: [head] auto [body] auto [foot] auto;
+    grid-template-areas: 'head' 'body' 'foot';
+    align-content: start;
+  }
+
+  .slide-body[data-area='foot'] {
+    position: static;
+    grid-area: foot;
+    justify-self: start;
+    align-self: start;
+    margin-top: 0.3rem;
+  }
+
+  .slide-visual,
+  .deck-slide[data-foot='true'] .slide-visual {
+    align-self: start;
+  }
+
+  .slide-visual > .concept-visual {
+    height: auto;
+    max-height: none;
+  }
+
+  .slide-split {
+    grid-template-rows: [head] auto [body] auto;
+    align-content: start;
+    row-gap: 1rem;
+  }
+
+  .slide-quote {
+    align-content: start;
+    padding-inline-start: 0;
+  }
+
+  .deck-source-rail {
+    position: sticky;
+    z-index: 8;
+    bottom: 0;
+    padding: 0.35rem 0 0.4rem;
+    background: color-mix(in srgb, var(--bg-deep) 94%, transparent);
+  }
+}
+
+@media print {
+  .deck-header,
+  .deck-footer,
+  .deck-help,
+  .deck-ambient,
+  .deck-act-wash,
+  .deck-act-folio,
+  .deck-laser,
+  .deck-laser-trail,
+  .visual-stage-cue {
+    display: none !important;
+  }
+
+  .deck-shell {
+    position: static;
+    display: block;
+    overflow: visible;
+    color: #111;
+    background: #fff;
+  }
+
+  .deck-stage {
+    display: block;
+    overflow: visible;
+  }
+
+  .deck-slide {
+    min-height: 100vh;
+    page-break-after: always;
+  }
+}
