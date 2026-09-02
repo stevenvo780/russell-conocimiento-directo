@@ -31,8 +31,8 @@ La exposición resume esa arquitectura en una fórmula:
 - `/`: introducción narrativa navegable.
 - `/presentacion`: deck de 14 diapositivas con revelados argumentales, SVG
   adaptativos, enlaces profundos, historial, índice por actos, notas navegables,
-  transiciones semánticas, puntero láser, cronómetro, gestos táctiles y pantalla
-  completa.
+  una cita textual visible y comentada por vista, transiciones semánticas,
+  puntero láser, cronómetro, gestos táctiles y pantalla completa.
 - `/fuentes`: referencia bibliográfica y criterio editorial.
 
 La portada responde al puntero y al avance de lectura, incorpora profundidad 3D

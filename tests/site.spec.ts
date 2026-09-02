@@ -328,6 +328,67 @@ test('source page exposes the canonical Markdown guide', async ({ page }) => {
   expect(href).toMatch(/Capitulo5.*\.md/i);
 });
 
+test('every slide and its presenter notes expose verified textual evidence', async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const sources = [
+    ['pregunta', 47], ['portada', 57], ['arquitectura', 47], ['color', 48],
+    ['mesa', 48], ['inventario', 49], ['yo', 51], ['universales', 51],
+    ['descripcion', 52], ['ganador', 52], ['bismarck', 54], ['principio', 56],
+    ['cautelas', 56], ['respuesta', 57],
+  ] as const;
+
+  await page.goto('/presentacion#pregunta');
+  for (const [id, pageNumber] of sources) {
+    await page.evaluate((slideId) => { window.location.hash = slideId; }, id);
+    await expect(page.locator('.deck-stage')).toHaveAttribute('data-slide-id', id);
+    const sourceRail = page.locator('.deck-source-rail');
+    await expect(sourceRail).toBeVisible();
+    await expect(sourceRail).toHaveAttribute('data-source-page', String(pageNumber));
+    await expect(sourceRail.locator('blockquote')).not.toBeEmpty();
+    await expect(sourceRail.locator('figcaption')).toHaveText(`Russell · cap. 5 · p. ${pageNumber}`);
+
+    await page.keyboard.press('s');
+    const evidence = page.locator('.speaker-evidence');
+    await expect(evidence).toBeVisible();
+    await expect(evidence.getByText(/Pasaje de apoyo/i)).toBeVisible();
+    await expect(evidence.locator('cite')).toHaveText(`Russell · capítulo 5 · p. ${pageNumber}`);
+    await expect(evidence.locator('blockquote')).toHaveText(await sourceRail.locator('blockquote').innerText());
+    await expect(evidence.getByText(/Qué demuestra:/i)).toBeVisible();
+    await page.keyboard.press('Escape');
+  }
+});
+
+test('the citation rail does not cover the logical formula at desktop presentation sizes', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Desktop geometry gate');
+  test.setTimeout(60_000);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 1366, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto(`/presentacion?geometry=${viewport.width}x${viewport.height}#descripcion`);
+    const stage = page.locator('.deck-stage');
+    await expect(stage).toHaveAttribute('data-slide-id', 'descripcion');
+    await expect(stage).toHaveAttribute('data-reveal-max', '4');
+    for (let reveal = 1; reveal <= 4; reveal += 1) {
+      await page.locator('.deck-footer .deck-arrow').last().click();
+      await expect(stage).toHaveAttribute('data-reveal-step', String(reveal));
+    }
+
+    const [formula, sourceRail] = await Promise.all([
+      page.locator('.logic-formula').boundingBox(),
+      page.locator('.deck-source-rail').boundingBox(),
+    ]);
+    expect(formula).not.toBeNull();
+    expect(sourceRail).not.toBeNull();
+    if (!formula || !sourceRail) continue;
+
+    const overlapWidth = Math.max(0, Math.min(formula.x + formula.width, sourceRail.x + sourceRail.width) - Math.max(formula.x, sourceRail.x));
+    const overlapHeight = Math.max(0, Math.min(formula.y + formula.height, sourceRail.y + sourceRail.height) - Math.max(formula.y, sourceRail.y));
+    expect(overlapWidth * overlapHeight, `overlap at ${viewport.width}x${viewport.height}`).toBe(0);
+  }
+});
+
 test('every slide fits vertically in the presentation stage', async ({ page }) => {
   test.setTimeout(60_000);
   await page.emulateMedia({ reducedMotion: 'reduce' });

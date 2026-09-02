@@ -718,6 +718,14 @@ export function PresentationPage() {
             </AnimatePresence>
           </motion.article>
         </AnimatePresence>
+        <figure
+          className="deck-source-rail"
+          data-source-page={current.citation.page}
+          aria-label={`Cita textual de Bertrand Russell, capítulo 5, página ${current.citation.page}`}
+        >
+          <blockquote>{current.citation.quote}</blockquote>
+          <figcaption>Russell · cap. 5 · p. {current.citation.page}</figcaption>
+        </figure>
       </section>
 
       <div className="sr-only" aria-live="polite" aria-atomic="true">
@@ -940,6 +948,14 @@ export function PresentationPage() {
                   <div className="speaker-script">
                     <span>Guion de esta diapositiva</span>
                     <h3>{currentLabel}</h3>
+                    <section className="speaker-evidence" aria-labelledby={`speaker-evidence-${current.id}`}>
+                      <header>
+                        <h4 id={`speaker-evidence-${current.id}`}>Pasaje de apoyo</h4>
+                        <cite>Russell · capítulo 5 · p. {current.citation.page}</cite>
+                      </header>
+                      <blockquote>{current.citation.quote}</blockquote>
+                      <p><strong>Qué demuestra:</strong> {current.citation.support}</p>
+                    </section>
                     {current.notes}
                   </div>
                   <aside className="speaker-next-cue" aria-label="Próxima diapositiva">

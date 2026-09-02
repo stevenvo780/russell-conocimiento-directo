@@ -12,6 +12,11 @@ import {
 
 export type Slide = {
   id: string;
+  citation: {
+    quote: string;
+    page: number;
+    support: string;
+  };
   eyebrow?: string;
   title: ReactNode;
   subtitle?: ReactNode;
@@ -75,6 +80,11 @@ function SpeakerNotes({
 export const slides: Slide[] = [
   {
     id: 'pregunta',
+    citation: {
+      quote: 'conozco directamente los datos de los sentidos que constituyen su apariencia',
+      page: 47,
+      support: 'La pregunta inicial distingue lo inmediatamente presentado del objeto físico.',
+    },
     eyebrow: '00 · Un experimento de diez segundos',
     title: (
       <>
@@ -113,6 +123,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'portada',
+    citation: {
+      quote: 'ir más allá de los límites de nuestra experiencia privada',
+      page: 57,
+      support: 'Resume el resultado que orienta toda la exposición.',
+    },
     eyebrow: 'Bertrand Russell · Los problemas de la filosofía · capítulo 5',
     title: (
       <>
@@ -151,6 +166,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'arquitectura',
+    citation: {
+      quote: 'hay dos clases de conocimiento de cosas y conocimiento de verdades',
+      page: 47,
+      support: 'Fija la primera distinción de la arquitectura conceptual.',
+    },
     eyebrow: 'ACTO I · Presencia · 01',
     title: 'Russell abre una grieta en la palabra «conocer»',
     subtitle: 'Conocer una cosa no es lo mismo que conocer verdades sobre ella.',
@@ -180,6 +200,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'color',
+    citation: {
+      quote: 'de un modo perfecto y completo',
+      page: 48,
+      support: 'Delimita la plenitud del conocimiento del dato, no de todas sus propiedades.',
+    },
     eyebrow: 'ACTO I · Presencia · 02',
     title: 'El color no depende de la frase',
     body: (
@@ -225,6 +250,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'mesa',
+    citation: {
+      quote: 'La mesa es «el objeto físico que causa tales y cuales datos de los sentidos»',
+      page: 48,
+      support: 'Formula la descripción causal mediante la cual se refiere la mesa.',
+    },
     eyebrow: 'ACTO I · Presencia · 03',
     title: 'Aquí ocurre el salto',
     visual: <TableBridge compact />,
@@ -257,6 +287,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'inventario',
+    citation: {
+      quote: 'Este conocimiento inmediato de la memoria es la fuente de todo nuestro conocimiento referente al pasado',
+      page: 49,
+      support: 'Justifica que la memoria amplíe lo directo hacia el pasado.',
+    },
     eyebrow: 'ACTO I · Presencia · 04',
     title: 'Lo directo es más amplio que este instante',
     visual: <DirectConstellation compact />,
@@ -295,6 +330,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'yo',
+    citation: {
+      quote: 'aunque el conocimiento directo de nosotros mismos parece probable, no es prudente afirmar que sea indudable',
+      page: 51,
+      support: 'Mantiene la tesis sobre el yo en el registro de lo probable.',
+    },
     eyebrow: 'ACTO I · Presencia · 05',
     title: 'Encuentro pensamientos. ¿Encuentro al pensador?',
     visual: <SubjectRelation compact />,
@@ -321,6 +361,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'universales',
+    citation: {
+      quote: 'tenemos un conocimiento directo de lo que denominamos universales',
+      page: 51,
+      support: 'Impide reducir el conocimiento directo a particulares sensibles.',
+    },
     eyebrow: 'ACTO I · Presencia · 06',
     title: 'Lo más abstracto también puede ser directo',
     body: (
@@ -364,6 +409,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'descripcion',
+    citation: {
+      quote: '«un hombre» es una referencia ambigua, y «el hombre de la máscara de hierro» es una descripción definida',
+      page: 52,
+      support: 'Muestra la diferencia entre referencia ambigua y definida.',
+    },
     eyebrow: 'ACTO II · Distancia · 07',
     title: 'La palabra «el» abre una puerta lógica',
     visual: <DescriptionGate compact />,
@@ -392,6 +442,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'ganador',
+    citation: {
+      quote: 'pero no sabemos cuál de los candidatos es',
+      page: 52,
+      support: 'Separa conocer candidatos de identificar al que satisface la descripción.',
+    },
     eyebrow: 'ACTO II · Distancia · 08',
     title: 'Conozco a cada candidato. Aún no conozco «al ganador»',
     visual: <CandidateParadox compact />,
@@ -423,6 +478,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'bismarck',
+    citation: {
+      quote: 'las varias referencias se aplican todas a la misma entidad',
+      page: 54,
+      support: 'Explica la estabilidad del referente bajo descripciones diferentes.',
+    },
     eyebrow: 'ACTO II · Distancia · 09',
     title: 'Un solo Bismarck. Varios caminos mentales',
     visual: <BismarckDistance compact />,
@@ -455,6 +515,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'principio',
+    citation: {
+      quote: 'Toda proposición que podamos entender debe estar compuesta exclusivamente por elementos de los cuales tengamos un conocimiento directo',
+      page: 56,
+      support: 'Enuncia la condición fundamental para comprender proposiciones descriptivas.',
+    },
     eyebrow: 'ACTO III · Alcance · 10 · La condición · p. 56',
     title: (
       <>
@@ -499,6 +564,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'cautelas',
+    citation: {
+      quote: 'No contestaremos, en el estadio que hemos alcanzado, a todas las objeciones',
+      page: 56,
+      support: 'Marca explícitamente que el principio todavía admite objeciones.',
+    },
     eyebrow: 'ACTO III · Alcance · 11 · Control de fidelidad',
     title: 'No todo tiene el mismo grado de compromiso',
     body: (
@@ -547,6 +617,11 @@ export const slides: Slide[] = [
   },
   {
     id: 'respuesta',
+    citation: {
+      quote: 'ir más allá de los límites de nuestra experiencia privada',
+      page: 57,
+      support: 'Expresa la función expansiva del conocimiento por referencia.',
+    },
     eyebrow: 'ACTO III · Alcance · 12 · Respuesta',
     title: 'La mesa no se presenta. La alcanzamos.',
     visual: <AnchorReach compact />,

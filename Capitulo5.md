@@ -116,6 +116,27 @@ En otros casos, el paso puede depender de distintas **verdades de enlace**. La m
 
 **Tiempo total:** 27:15. Las pausas del experimento inicial, una intervención del público y las transiciones lo sitúan naturalmente entre 28 y 30 minutos.
 
+### Banco textual sincronizado con las vistas
+
+Cada diapositiva muestra uno de estos pasajes y las notas explican inmediatamente qué demuestra. Las páginas corresponden a la edición impresa de 1995, no a los marcadores técnicos `PDF_PAGE`.
+
+| # | Pasaje literal breve | Página |
+|---:|---|---:|
+| 1 | «conozco directamente los datos de los sentidos que constituyen su apariencia» | 47 |
+| 2 | «ir más allá de los límites de nuestra experiencia privada» | 57 |
+| 3 | «hay dos clases de conocimiento de cosas y conocimiento de verdades» | 47 |
+| 4 | «de un modo perfecto y completo» | 48 |
+| 5 | La mesa es «el objeto físico que causa tales y cuales datos de los sentidos». | 48 |
+| 6 | «Este conocimiento inmediato de la memoria es la fuente de todo nuestro conocimiento referente al pasado» | 49 |
+| 7 | «aunque el conocimiento directo de nosotros mismos parece probable, no es prudente afirmar que sea indudable» | 51 |
+| 8 | «tenemos un conocimiento directo de lo que denominamos universales» | 51 |
+| 9 | «un hombre» es una referencia ambigua, y «el hombre de la máscara de hierro» es una descripción definida. | 52 |
+| 10 | «pero no sabemos cuál de los candidatos es» | 52 |
+| 11 | «las varias referencias se aplican todas a la misma entidad» | 54 |
+| 12 | «Toda proposición que podamos entender debe estar compuesta exclusivamente por elementos de los cuales tengamos un conocimiento directo» | 56 |
+| 13 | «No contestaremos, en el estadio que hemos alcanzado, a todas las objeciones» | 56 |
+| 14 | «ir más allá de los límites de nuestra experiencia privada» | 57 |
+
 ---
 
 <a id="acto-i"></a>
