@@ -3,7 +3,19 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/((?!assets/|favicon\\.svg|og-card\\.png|robots\\.txt).*)",
+      "source": "/presentacion",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/presentacion/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/fuentes",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/fuentes/:path*",
       "destination": "/index.html"
     }
   ],
